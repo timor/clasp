@@ -87,10 +87,10 @@ struct _TRACE {
     lisp_error_condition(__FUNCTION__, __FILE__, __LINE__, _type_, _initializers_); \
     THROW_NEVER_REACH();                                                            \
   }
-#define SIMPLE_ERROR(_boost_fmt_)                                           \
-  {                                                                         \
-      ::core::lisp_error_simple(__FUNCTION__, __FILE__, __LINE__, _boost_fmt_); \
-    THROW_NEVER_REACH();                                                    \
+#define SIMPLE_ERROR(_boost_fmt_)                                             \
+  {                                                                           \
+    ::core::lisp_error_simple(__FUNCTION__, __FILE__, __LINE__, _boost_fmt_); \
+    THROW_NEVER_REACH();                                                      \
   }
 #define NOT_ENVIRONMENT_ERROR(e) SIMPLE_ERROR(BF("Not an environment"))
 #define SIMPLE_ERROR_BF(_str_) SIMPLE_ERROR(BF(_str_))
@@ -120,7 +120,7 @@ struct _TRACE {
 #define TYPE_ERROR(_datum_, _expectedType_) ERROR(cl::_sym_typeError, core::lisp_createList(kw::_sym_datum, _datum_, kw::_sym_expectedType, _expectedType_))
 #define FILE_ERROR(_file_) ERROR(cl::_sym_fileError, core::lisp_createList(kw::_sym_pathname, _file_))
 #define CANNOT_OPEN_FILE_ERROR(_file_) FILE_ERROR(_file_)
-//#define TOO_FEW_ARGUMENTS_ERROR() NO_INITIALIZERS_ERROR(core::_sym_tooFewArgumentsError)
+#define TOO_FEW_ARGUMENTS_ERROR() NO_INITIALIZERS_ERROR(core::_sym_tooFewArgumentsError)
 //#define TOO_MANY_ARGUMENTS_ERROR() NO_INITIALIZERS_ERROR(core::_sym_tooManyArgumentsError)
 //#define UNRECOGNIZED_KEYWORD_ARGUMENTS_ERROR(obj) ERROR(core::_sym_unrecognizedKeywordArgumentsError,obj)
 #define INVALID_KEYWORD_ARGUMENT_ERROR(obj) ERROR(core::_sym_invalidKeywordArgumentError, obj)
@@ -710,11 +710,12 @@ void FEerror(const string &fmt, int numArgs, ...);
 void FEtype_error_list(T_sp thing);
 void FElibc_error(const char *fmt, int nargs, ...);
 void FEcannot_open(T_sp fn);
+ void FEargument_number_error(T_sp supplied, T_sp min, T_sp max);
 T_sp CEerror(T_sp c, const char *fmt, int numArgs, ...);
 
- void FEpackage_error(const char *fmt, T_sp package, int nargs, ...);
- void CEpackage_error(const char *fmt, const char* continue_message, T_sp package, int nargs, ...);
- void Warn(T_sp datum, List_sp arguments);
+void FEpackage_error(const char *fmt, T_sp package, int nargs, ...);
+void CEpackage_error(const char *fmt, const char *continue_message, T_sp package, int nargs, ...);
+void Warn(T_sp datum, List_sp arguments);
 
 void clasp_internal_error(const char *error);
 

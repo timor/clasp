@@ -44,7 +44,7 @@ typedef enum { required,
                optional,
                dot_rest,
                rest,
-               va_rest, 
+               va_rest,
                keyword,
                allowOtherKeys,
                aux } ArgumentMode;
@@ -196,7 +196,7 @@ public:
                                       DynamicScopeManager &scope);
 
   void createBindingsInScopeVaList(size_t n_args, VaList_sp argArray,
-                                      DynamicScopeManager &scope);
+                                   DynamicScopeManager &scope);
 
   void createBindingsInScope_argArray_TPtr(int n_args, T_O *argArray[],
                                            DynamicScopeManager &scope);
@@ -280,7 +280,7 @@ public:
   string partsAsString() const;
 
   LambdaListHandler_O();
-  virtual ~LambdaListHandler_O() {};
+  virtual ~LambdaListHandler_O(){};
 };
 };
 TRANSLATE(core::LambdaListHandler_O);
@@ -288,8 +288,7 @@ template <>
 struct gctools::GCInfo<core::LambdaListHandler_O> {
   static bool constexpr NeedsInitialization = true;
   static bool constexpr NeedsFinalization = false;
-  static bool constexpr Moveable = true;
-  static bool constexpr Atomic = false;
+  static GCInfo_policy constexpr Policy = normal;
 };
 
 #endif //]

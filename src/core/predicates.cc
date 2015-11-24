@@ -66,7 +66,6 @@ bool core_baseCharP(T_sp arg) {
   return false;
 };
 
-
 #define ARGS_af_bignumP "(arg)"
 #define DECL_af_bignumP ""
 #define DOCS_af_bignumP "bignumP"
@@ -106,7 +105,7 @@ bool af_doubleFloatP(T_sp obj) {
 #define DECL_cl_functionp ""
 #define DOCS_cl_functionp "functionP"
 bool cl_functionp(T_sp obj) {
-  if ( Instance_sp inst_obj = obj.asOrNull<Instance_O>() ) {
+  if (Instance_sp inst_obj = obj.asOrNull<Instance_O>()) {
     return inst_obj->isgf();
   }
   return gc::IsA<Function_sp>(obj);
@@ -124,7 +123,6 @@ bool af_interpretedFunctionP(T_sp arg) {
   }
   return false;
 };
-
 
 #define ARGS_cl_packagep "(arg)"
 #define DECL_cl_packagep ""
@@ -431,11 +429,12 @@ bool af_logicalPathnameP(T_sp obj) {
 
 void initialize_predicates() {
   af_def(ClPkg, "endp", &cl_endp);
-#define newNameDefun(pkg, myname, lispname) af_def(CorePkg, #lispname, &myname, ARGS_##myname, DECL_##myname, DOCS_##myname)
+#define newNameDefun(pkg, myname, lispname) af_def(pkg, #lispname, &myname, ARGS_##myname, DECL_##myname, DOCS_##myname)
   af_def(ClPkg, "symbolp", &cl_symbolp);
   af_def(ClPkg, "consp", &cl_consp);
   af_def(ClPkg, "listp", &cl_listp);
   ClDefun(numberp);
+// clang-format off
   newNameDefun(CorePkg, af_integerP, cl:integerp);
   newNameDefun(CorePkg, af_rationalP, cl:rationalp);
   newNameDefun(CorePkg, af_floatP, cl:floatp);
@@ -455,11 +454,12 @@ void initialize_predicates() {
   newNameDefun(CorePkg, af_genericFunctionP, core:genericFunctionP);
   newNameDefun(CorePkg, af_keywordP, cl:keywordp);
   newNameDefun(CorePkg, cl_atom, cl:atom);
-  CoreDefun(baseCharP);
   newNameDefun(CorePkg, af_fixnumP, core:fixnump);
   newNameDefun(CorePkg, af_bignumP, core:bignump);
   newNameDefun(CorePkg, af_strP, core:strP);
   newNameDefun(CorePkg, af_doubleFloatP, core:doubleFloatP);
+// clang-format off
+  CoreDefun(baseCharP);
   SYMBOL_EXPORT_SC_(ClosPkg, classp);
   af_def(ClosPkg, "classp", &af_classp, ARGS_af_classp, DECL_af_classp, DOCS_af_classp);
   af_def(CorePkg, "builtInClassP", &core_builtInClassP, ARGS_core_builtInClassP, DECL_core_builtInClassP, DOCS_core_builtInClassP);

@@ -66,8 +66,8 @@ public:
   /*! Allocate and initialize an instance of this class
          */
   T_sp allocateAndInitialize();
-  explicit BuiltInClass_O() {};
-  virtual ~BuiltInClass_O() {};
+  explicit BuiltInClass_O(){};
+  virtual ~BuiltInClass_O(){};
 };
 };
 TRANSLATE(core::BuiltInClass_O);
@@ -75,8 +75,7 @@ template <>
 struct gctools::GCInfo<core::BuiltInClass_O> {
   static bool constexpr NeedsInitialization = true;
   static bool constexpr NeedsFinalization = false;
-  static bool constexpr Moveable = true; // old=false
-  static bool constexpr Atomic = false;
+  static GCInfo_policy constexpr Policy = normal;
 };
 
 #endif //]

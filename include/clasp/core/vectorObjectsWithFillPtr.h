@@ -57,7 +57,6 @@ public: // Functions here
   virtual T_sp elt(int index) const;
   virtual T_sp setf_elt(int index, T_sp value);
 
-
   string __repr__() const;
 
   cl_index fillPointer() const { return this->_FillPtr; };
@@ -75,8 +74,7 @@ template <>
 struct gctools::GCInfo<core::VectorObjectsWithFillPtr_O> {
   static bool constexpr NeedsInitialization = false;
   static bool constexpr NeedsFinalization = false;
-  static bool constexpr Moveable = true;
-  static bool constexpr Atomic = false;
+  static GCInfo_policy constexpr Policy = normal;
 };
 
 #endif /* _core_VectorObjectsWithFillPtr_H */

@@ -16,12 +16,18 @@
     (print (core:getpid)))
   (print "Done - you are ready to go"))
 
-
 (progn
   (load "sys:kernel;cleavir;auto-compile.lisp")
   (format t "Loading inline.lisp~%")
   (load "sys:kernel;cleavir;inline.lisp")
   (format t "Done loading inline.lisp~%"))
+
+(apropos "cleavir-compile-file")
+
+(clasp-cleavir::cleavir-compile-file "sys:tests;targs.lsp")
+(load "sys:tests;targs.fasl")
+
+
 
 (eval '(defmethod foo () (zzzzz)))
 (eval '(defmethod m () (undefined)))

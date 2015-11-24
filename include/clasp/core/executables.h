@@ -43,7 +43,6 @@ THE SOFTWARE.
 #include <clasp/core/lambdaListHandler.fwd.h>
 #include <clasp/core/lispDefinitions.h>
 
-
 namespace core {
 
 #if 0
@@ -125,8 +124,7 @@ template <>
 struct gctools::GCInfo<core::Function_O> {
   static bool constexpr NeedsInitialization = false;
   static bool constexpr NeedsFinalization = false;
-  static bool constexpr Moveable = true;
-  static bool constexpr Atomic = false;
+  static GCInfo_policy constexpr Policy = normal;
 };
 TRANSLATE(core::Function_O);
 
@@ -140,7 +138,7 @@ public:
 
 public:
   DISABLE_NEW();
-  InterpretedClosure(T_sp fn, Symbol_sp k, LambdaListHandler_sp llh, List_sp dec, T_sp doc, T_sp e, List_sp c, SOURCE_INFO );
+  InterpretedClosure(T_sp fn, Symbol_sp k, LambdaListHandler_sp llh, List_sp dec, T_sp doc, T_sp e, List_sp c, SOURCE_INFO);
   virtual size_t templatedSizeof() const { return sizeof(*this); };
   virtual const char *describe() const { return "InterpretedClosure"; };
   LCC_VIRTUAL LCC_RETURN LISP_CALLING_CONVENTION();
@@ -206,8 +204,7 @@ template <>
 struct gctools::GCInfo<core::CompiledFunction_O> {
   static bool constexpr NeedsInitialization = false;
   static bool constexpr NeedsFinalization = false;
-  static bool constexpr Moveable = true;
-  static bool constexpr Atomic = false;
+  static GCInfo_policy constexpr Policy = normal;
 };
 TRANSLATE(core::CompiledFunction_O);
 
