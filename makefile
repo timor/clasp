@@ -168,23 +168,23 @@ define varprint
 endef
 
 all:
-	make print-config
-	make submodules
-	make asdf
-	make boost_build
-	make boehm
+	$(MAKE) print-config
+	$(MAKE) submodules
+	$(MAKE) asdf
+	$(MAKE) boost_build
+	$(MAKE) boehm
 	install -d build/clasp/Contents/Resources
 	@if test ! -e build/clasp/Contents/Resources/clasp; then (cd build/clasp/Contents/Resources; ln -s ../../../../ clasp) ; fi
 	(cd src/lisp; $(BJAM) -j$(PJOBS) toolset=$(TOOLSET) link=$(LINK) program=clasp gc=boehm bundle )
 	(cd src/main; $(BUILD) -j$(PJOBS) toolset=$(TOOLSET) link=$(LINK) program=clasp --prefix=$(CLASP_APP_EXECS)/boehm/$(VARIANT) gc=boehm $(VARIANT) clasp_install )
-	make -C src/main min-boehm
-	make -C src/main bclasp-boehm-bitcode
-	make -C src/main bclasp-boehm-fasl
-	make -C src/main cclasp-from-bclasp-boehm-bitcode
-#	make -C src/main cclasp-boehm-fasl
-	make -C src/main cclasp-boehm-fasl
-	make -C src/main cclasp-boehm-addons
-	make executable-symlinks
+	$(MAKE) -C src/main min-boehm
+	$(MAKE) -C src/main bclasp-boehm-bitcode
+	$(MAKE) -C src/main bclasp-boehm-fasl
+	$(MAKE) -C src/main cclasp-from-bclasp-boehm-bitcode
+#	$(MAKE) -C src/main cclasp-boehm-fasl
+	$(MAKE) -C src/main cclasp-boehm-fasl
+	$(MAKE) -C src/main cclasp-boehm-addons
+	$(MAKE) executable-symlinks
 	echo Clasp is now built
 
 lisp-source:
@@ -202,22 +202,22 @@ mps-build:
 
 
 boot:
-	make submodules
-	make asdf
-	make boost_build
-	make boehm
-	make -C src/main boehmdc-release-cxx
-	make executable-symlinks
-	make -C src/main min-boehmdc
-	make -C src/main bclasp-boehmdc-bitcode
-	make -C src/main bclasp-boehmdc-fasl
-	make -C src/main bclasp-boehmdc-addons
+	$(MAKE) submodules
+	$(MAKE) asdf
+	$(MAKE) boost_build
+	$(MAKE) boehm
+	$(MAKE) -C src/main boehmdc-release-cxx
+	$(MAKE) executable-symlinks
+	$(MAKE) -C src/main min-boehmdc
+	$(MAKE) -C src/main bclasp-boehmdc-bitcode
+	$(MAKE) -C src/main bclasp-boehmdc-fasl
+	$(MAKE) -C src/main bclasp-boehmdc-addons
 
 boot-mps-interface:
-	make boot
-	make -C src/main mps-interface
-#	make -C src/main bclasp-boehmdc
-#	make -C src/main bclasp-boehmdc-addons
+	$(MAKE) boot
+	$(MAKE) -C src/main mps-interface
+#	$(MAKE) -C src/main bclasp-boehmdc
+#	$(MAKE) -C src/main bclasp-boehmdc-addons
 
 clasp-libraries:
 	(cd src/gctools; $(BJAM) link=$(LINK) program=clasp gctools install-lib)
@@ -241,8 +241,8 @@ libatomic-setup:
 		./configure --enable-shared=yes --enable-static=yes --enable-handle-fork --enable-cplusplus --prefix=$(CLASP_APP_RESOURCES_LIB_COMMON_DIR);)
 
 libatomic-compile:
-	(cd $(LIBATOMIC_OPS_SOURCE_DIR); make -j$(PJOBS) | tee _libatomic_ops.log)
-	(cd $(LIBATOMIC_OPS_SOURCE_DIR); make -j$(PJOBS) install | tee _libatomic_ops_install.log)
+	(cd $(LIBATOMIC_OPS_SOURCE_DIR); $(MAKE) -j$(PJOBS) | tee _libatomic_ops.log)
+	(cd $(LIBATOMIC_OPS_SOURCE_DIR); $(MAKE) -j$(PJOBS) install | tee _libatomic_ops_install.log)
 
 boehm-setup:
 	-(cd $(BOEHM_SOURCE_DIR); autoreconf -vif)
@@ -256,16 +256,16 @@ boehm-setup:
 		./configure --enable-shared=yes --enable-static=yes --enable-handle-fork --enable-cplusplus --prefix=$(CLASP_APP_RESOURCES_LIB_COMMON_DIR) --with-libatomic-ops=yes;)
 
 boehm-compile:
-	(cd $(BOEHM_SOURCE_DIR); make -j$(PJOBS) | tee _boehm.log)
-	(cd $(BOEHM_SOURCE_DIR); make -j$(PJOBS) install | tee _boehm_install.log)
+	(cd $(BOEHM_SOURCE_DIR); $(MAKE) -j$(PJOBS) | tee _boehm.log)
+	(cd $(BOEHM_SOURCE_DIR); $(MAKE) -j$(PJOBS) install | tee _boehm_install.log)
 
 export LIBATOMIC_OPS_CONFIGURE=src/boehm/libatomic_ops/configure
 export BDWGC_CONFIGURE=src/boehm/bdwgc/configure
 boehm:
-	@if test ! -e $(LIBATOMIC_OPS_CONFIGURE); then make libatomic-setup ; fi
-	@if test ! -e $(CLASP_INTERNAL_BUILD_TARGET_DIR)/Contents/Resources/lib/common/lib/libatomic_ops.a ; then make libatomic-compile ; fi
-	@if test ! -e $(BDWGC_CONFIGURE); then make boehm-setup ; fi
-	@if test ! -e $(CLASP_INTERNAL_BUILD_TARGET_DIR)/Contents/Resources/lib/common/lib/libgc.a ; then make boehm-compile ; fi
+	@if test ! -e $(LIBATOMIC_OPS_CONFIGURE); then $(MAKE) libatomic-setup ; fi
+	@if test ! -e $(CLASP_INTERNAL_BUILD_TARGET_DIR)/Contents/Resources/lib/common/lib/libatomic_ops.a ; then $(MAKE) libatomic-compile ; fi
+	@if test ! -e $(BDWGC_CONFIGURE); then $(MAKE) boehm-setup ; fi
+	@if test ! -e $(CLASP_INTERNAL_BUILD_TARGET_DIR)/Contents/Resources/lib/common/lib/libgc.a ; then $(MAKE) boehm-compile ; fi
 
 
 boehm-release-clbind:
@@ -288,13 +288,13 @@ mps-clbind:
 
 boehm-clean:
 	install -d $(BOEHM_SOURCE_DIR)
-	-(cd $(BOEHM_SOURCE_DIR); make clean )
+	-(cd $(BOEHM_SOURCE_DIR); $(MAKE) clean )
 	if test -e $(LIBATOMIC_OPS_CONFIGURE); then rm $(LIBATOMIC_OPS_CONFIGURE) ; fi
 	if test	-e $(BDWGC_CONFIGURE); then rm $(BDWGC_CONFIGURE) ; fi
 
 pump:
-	(cd src/core; make pump)
-	(cd src/clbind; make pump)
+	(cd src/core; $(MAKE) pump)
+	(cd src/clbind; $(MAKE) pump)
 
 submodules:
 	$(MAKE) submodules-boehm
@@ -313,7 +313,7 @@ submodules-mps:
 	-git submodule update --init src/mps
 
 asdf:
-	(cd src/lisp/modules/asdf; make)
+	(cd src/lisp/modules/asdf; $(MAKE))
 
 
 #
@@ -351,7 +351,7 @@ devshell-telemetry:
 
 
 boost_build:
-	@if test ! -e $(BOOST_BUILD_INSTALL)/bin/bjam ; then make boost_build-compile ; fi
+	@if test ! -e $(BOOST_BUILD_INSTALL)/bin/bjam ; then $(MAKE) boost_build-compile ; fi
 
 boost_build-compile:
 	install -d $(BOOST_BUILD_INSTALL)
@@ -359,7 +359,7 @@ boost_build-compile:
 
 clean:
 	git submodule sync
-	make boehm-clean
+	$(MAKE) boehm-clean
 	(cd include/clasp/main/generated; rm *)
 	(cd src/main; rm -rf bin bundle)
 	(cd src/core; rm -rf bin bundle)
@@ -380,7 +380,7 @@ setup-cleavir:
 
 pull-sicl-master:
 	(cd src/lisp/kernel/contrib/sicl; git pull origin master)
-	make setup-cleavir
+	$(MAKE) setup-cleavir
 
 mps-submodule:
 	git submodule add -b dev/2014-08-18/non-incremental  https://github.com/Ravenbrook/mps-temporary ./src/mps
