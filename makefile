@@ -317,7 +317,7 @@ $(CLASP_APP_EXECS)/boehm/release/bin/clasp: boost_build boehm
 boehm-cxx: $(CLASP_APP_EXECS)/boehm/release/bin/clasp
 .PHONY: boehm-cxx
 
-$(CLASP_APP_RESOURCES_DIR)/lisp/build/system/min-boehm/image.o: boehm-cxx
+$(CLASP_APP_RESOURCES_DIR)/lisp/build/system/min-boehm/image.o: boehm-cxx copy-lisp
 	$(MAKE) -C src/main min-boehm
 min-boehm: $(CLASP_APP_RESOURCES_DIR)/lisp/build/system/min-boehm/image.o
 .PHONY: min-boehm
@@ -328,14 +328,14 @@ $(CLASP_APP_RESOURCES_DIR)/lisp/build/system/full-boehm/image.o: min-boehm
 full-boehm: $(CLASP_APP_RESOURCES_DIR)/lisp/build/system/full-boehm/image.o
 .PHONY: full-boehm
 
-$(CLASP_APP_RESOURCES_DIR)/lisp/build/system/cclasp-boehm/image.o: full-boehm
+$(CLASP_APP_RESOURCES_DIR)/lisp/build/system/cclasp-boehm/image.o: full-boehm submodule-sicl
 	$(MAKE) -C src/main cclasp-from-bclasp-boehm-bitcode
 	$(MAKE) -C src/main cclasp-boehm-fasl
 cclasp-boehm: $(CLASP_APP_RESOURCES_DIR)/lisp/build/system/cclasp-boehm/image.o
 .PHONY: cclasp-boehm
 
 CCLASP_BOEHM_MODULES = $(CLASP_APP_RESOURCES_DIR)/lisp/build/system/cclasp-boehm/modules
-$(CCLASP_BOEHM_MODULES)/serve-event/serve-event.o $(CCLASP_BOEHM_MODULES)/asdf/asdf.o: cclasp-boehm
+$(CCLASP_BOEHM_MODULES)/serve-event/serve-event.o $(CCLASP_BOEHM_MODULES)/asdf/asdf.o: cclasp-boehm submodule-asdf
 	$(MAKE) -C src/main cclasp-boehm-addons
 cclasp-boehm-addons: $(CCLASP_BOEHM_MODULES)/serve-event/serve-event.o $(CCLASP_BOEHM_MODULES)/asdf/asdf.o
 .PHONY: cclasp-boehm-addons
