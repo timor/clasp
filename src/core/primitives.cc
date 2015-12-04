@@ -77,7 +77,7 @@ THE SOFTWARE.
 #include <clasp/core/designators.h>
 #include <clasp/core/profile.h>
 #include <clasp/core/wrappers.h>
-namespace core {
+CL_NAMESPACE namespace core {
 
 #define ARGS_cl_sleep "(seconds)"
 #define DECL_cl_sleep ""
@@ -356,10 +356,25 @@ T_sp af_getEnv(Str_sp arg) {
   return Str_O::create(sres);
 };
 
+
+LAMBDA();
+DECLARE();
+DOCSTRING(R"doc(Return a string representing the llvm version (eg: 3.6.0))doc")
+CL_DEFUN T_sp ext_llvm_version() {
+  return core::Str_O::create(LLVM_VERSION);
+}
+
+
 #define ARGS_core_describe_cxx_object "(name &optional stream)"
 #define DECL_core_describe_cxx_object ""
 #define DOCS_core_describe_cxx_object "Describe a C++ object as CL:DESCRIBE"
-void core_describe_cxx_object(T_sp obj, T_sp stream) {
+LAMBDA(name &optional stream)
+DECLARE()
+DOCSTRING(R"doc(Describe a
+C++ object
+like CL:DESCRIBE)doc")
+CL_DEFUN void core_describe_cxx_object(T_sp obj, T_sp stream)
+{
   if (obj.generalp()) {
     obj->describe(stream);
   } else if (obj.consp()) {
@@ -371,14 +386,20 @@ void core_describe_cxx_object(T_sp obj, T_sp stream) {
 #define ARGS_core_setenv "(name arg overwrite)"
 #define DECL_core_setenv ""
 #define DOCS_core_setenv "getEnv"
-void core_setenv(Str_sp name, Str_sp arg, bool overwrite) {
+LAMBDA(name arg overwrite)
+DECLARE()
+DOCSTRING(R"doc(Set an environment variable)doc")
+CL_DEFUN void core_setenv(Str_sp name, Str_sp arg, bool overwrite) {
   setenv(name->c_str(), arg->c_str(), overwrite);
 };
 
-#define ARGS_af_pointer "(arg)"
-#define DECL_af_pointer ""
-#define DOCS_af_pointer "Return the value of the pointer - used by conditions.lsp"
-int af_pointer(T_sp obj) {
+#define ARGS_core_pointer "(arg)"
+#define DECL_core_pointer ""
+#define DOCS_core_pointer "Return the value of the pointer - used by conditions.lsp"
+LAMBDA(arg)
+DECLARE()
+DOCSTRING(R"doc(Return the value of a pointer - used by conditions.lsp - not useful in MPS)doc")
+CL_DEFUN int core_pointer(T_sp obj) {
   _G();
   return obj.intptr();
 };
@@ -743,10 +764,9 @@ T_mv af_identity(T_sp arg) {
   return (Values(arg));
 };
 
-#define DOCS_af_macroexpand_default "macroexpand_default Default value of *macroexpand-hook*"
-#define LOCK_af_macroexpand_default 1
 #define ARGS_af_macroexpand_default "(macro_function form macro_env)"
 #define DECL_af_macroexpand_default ""
+#define DOCS_af_macroexpand_default "macroexpand_default Default value of *macroexpand-hook*"
 T_mv af_macroexpand_default(Function_sp macro_function, T_sp form, T_sp macro_env) {
   _G();
   Function_sp debugMacroFunction = macro_function;
@@ -777,7 +797,6 @@ T_mv af_macroexpand_default(Function_sp macro_function, T_sp form, T_sp macro_en
 #define ARGS_af_null "(obj)"
 #define DECL_af_null ""
 #define DOCS_af_null "null test - return true if the object is the empty list otherwise return nil"
-#define LOCK_af_null 1
 T_mv af_null(T_sp obj) {
   _G();
   if (obj.nilp())
@@ -785,10 +804,9 @@ T_mv af_null(T_sp obj) {
   return (Values(_Nil<T_O>()));
 };
 
-#define LOCK_af_classOf 1
-#define DOCS_af_classOf "return class of object - see CLHS"
 #define ARGS_af_classOf "(obj)"
 #define DECL_af_classOf ""
+#define DOCS_af_classOf "return class of object - see CLHS"
 Class_sp af_classOf(T_sp obj) {
   _G();
   Class_sp result = lisp_instance_class(obj);
@@ -798,10 +816,9 @@ Class_sp af_classOf(T_sp obj) {
   return (result);
 }
 
-#define LOCK_af_STARfset 1
-#define DOCS_af_STARfset "fset - bind a function to its name - handles symbol function-name and (SETF XXXX) names. (macro) defines if the function is a macro or not."
 #define ARGS_af_STARfset "(function-name fn &optional macro)"
 #define DECL_af_STARfset ""
+#define DOCS_af_STARfset "fset - bind a function to its name - handles symbol function-name and (SETF XXXX) names. (macro) defines if the function is a macro or not."
 T_sp af_STARfset(T_sp functionName, Function_sp functionObject, T_sp macro) {
   ASSERTF(functionObject, BF("function is undefined\n"));
   if (macro.isTrue()) {
@@ -891,19 +908,18 @@ T_mv af_fmakunbound(T_sp functionName) {
   SIMPLE_ERROR(BF("Illegal function-name[%s]") % _rep_(functionName));
 }
 
-#define LOCK_af_read_delimited_list 1
-#define DOCS_af_read_delimited_list "read a list up to a specific character - see CLHS"
 #define ARGS_af_read_delimited_list "(char &optional input-stream-designator recursive-p)"
 #define DECL_af_read_delimited_list ""
+#define DOCS_af_read_delimited_list "read a list up to a specific character - see CLHS"
 T_mv af_read_delimited_list(Character_sp chr, T_sp input_stream_designator, T_sp recursive_p) {
   _G();
   T_sp sin = coerce::inputStreamDesignator(input_stream_designator);
 #if 0
 	// I think it is safe to ignore recursive_p
-	if ( recursive_p.isTrue() )
-	{
-	    SIMPLE_ERROR(BF("Currently I don't handle recursive-p[true] for read_delimited_list"));
-	}
+  if ( recursive_p.isTrue() )
+  {
+    SIMPLE_ERROR(BF("Currently I don't handle recursive-p[true] for read_delimited_list"));
+  }
 #endif
   T_sp result = read_list(sin, clasp_as_char(chr), true);
   if (cl::_sym_STARread_suppressSTAR->symbolValue().isTrue()) {
@@ -912,51 +928,61 @@ T_mv af_read_delimited_list(Character_sp chr, T_sp input_stream_designator, T_sp
   return (Values(result));
 }
 
-#define LOCK_cl_read 1
-#define DOCS_cl_read "read an object from a stream - see CLHS"
 #define ARGS_cl_read "(&optional input-stream-designator (eof-error-p t) eof-value recursive-p)"
 #define DECL_cl_read ""
+#define DOCS_cl_read "read an object from a stream - see CLHS"
 T_sp cl_read(T_sp input_stream_designator, T_sp eof_error_p, T_sp eof_value, T_sp recursive_p) {
-  _G();
+  bool preserve_whitespace = true;
+  if ( recursive_p.isTrue() ) {
+    preserve_whitespace = _sym_STARpreserve_whitespace_pSTAR->symbolValue().isTrue();
+  } else {
+    preserve_whitespace = false;
+  }
+  DynamicScopeManager scope(_sym_STARpreserve_whitespace_pSTAR, _lisp->_boolean(preserve_whitespace));
   T_sp sin = coerce::inputStreamDesignator(input_stream_designator);
-  return (read_lisp_object(sin, eof_error_p.isTrue(), eof_value, recursive_p.notnilp()));
+  return read_lisp_object(sin, eof_error_p.isTrue(), eof_value, recursive_p.notnilp());
 }
 
-#define DOCS_cl_read_preserving_whitespace "read an object from a stream while preserving whitespace - see CLHS"
 #define ARGS_cl_read_preserving_whitespace "(&optional input-stream-designator (eof-error-p t) eof-value recursive-p)"
 #define DECL_cl_read_preserving_whitespace ""
+#define DOCS_cl_read_preserving_whitespace "read an object from a stream while preserving whitespace - see CLHS"
 T_sp cl_read_preserving_whitespace(T_sp input_stream_designator, T_sp eof_error_p, T_sp eof_value, T_sp recursive_p) {
-  _G();
-  DynamicScopeManager scope(_sym_STARpreserve_whitespace_pSTAR, _lisp->_true());
+  bool preserve_whitespace = true;
+  if ( recursive_p.isTrue() ) {
+    preserve_whitespace = _sym_STARpreserve_whitespace_pSTAR->symbolValue().isTrue();
+  } else {
+    preserve_whitespace = true;
+  }
+  DynamicScopeManager scope(_sym_STARpreserve_whitespace_pSTAR, _lisp->_boolean(preserve_whitespace));
   T_sp sin = coerce::inputStreamDesignator(input_stream_designator);
-  return (read_lisp_object(sin, eof_error_p.isTrue(), eof_value, recursive_p.isTrue()));
+  return read_lisp_object(sin, eof_error_p.isTrue(), eof_value, recursive_p.isTrue());
 }
 
 /* -------------------------------------------------------- */
 /*     Sequence primitives                                  */
 
 #if 0
-    GC_RESULT VectorStepper::onHeapScanGCRoots(GC_SCAN_ARGS_PROTOTYPE)
-    {
+GC_RESULT VectorStepper::onHeapScanGCRoots(GC_SCAN_ARGS_PROTOTYPE)
+{
 #ifdef USE_MPS
-        MPS_SCAN_BEGIN(GC_SCAN_STATE) {
-            SMART_PTR_FIX(this->_Domain);
-        } MPS_SCAN_END(GC_SCAN_STATE);
+  MPS_SCAN_BEGIN(GC_SCAN_STATE) {
+    SMART_PTR_FIX(this->_Domain);
+  } MPS_SCAN_END(GC_SCAN_STATE);
 #endif
-        return GC_RES_OK;
-    }
+  return GC_RES_OK;
+}
 #endif
 
 #if 0
-    GC_RESULT ConsStepper::onHeapScanGCRoots(GC_SCAN_ARGS_PROTOTYPE)
-    {
+GC_RESULT ConsStepper::onHeapScanGCRoots(GC_SCAN_ARGS_PROTOTYPE)
+{
 #ifdef USE_MPS
-        MPS_SCAN_BEGIN(GC_SCAN_STATE) {
-            SMART_PTR_FIX(this->_Cur);
-        } MPS_SCAN_END(GC_SCAN_STATE);
+  MPS_SCAN_BEGIN(GC_SCAN_STATE) {
+    SMART_PTR_FIX(this->_Cur);
+  } MPS_SCAN_END(GC_SCAN_STATE);
 #endif
-        return GC_RES_OK;
-    }
+  return GC_RES_OK;
+}
 #endif
 
 ListOfSequenceSteppers::ListOfSequenceSteppers(List_sp sequences) {
@@ -980,7 +1006,7 @@ ListOfSequenceSteppers::ListOfSequenceSteppers(List_sp sequences) {
   }
   this->_AtEnd = false;
   return;
-EMPTY:
+ EMPTY:
   this->_AtEnd = true;
 }
 
@@ -1024,7 +1050,7 @@ ListOfListSteppers::ListOfListSteppers(List_sp sequences) {
   }
   this->_AtEnd = false;
   return;
-EMPTY:
+ EMPTY:
   this->_AtEnd = true;
   return;
 }
@@ -1047,14 +1073,13 @@ bool test_every_some_notevery_notany(Function_sp predicate, List_sp sequences, b
     steppers.advanceSteppers();
   }
   LOG(BF("passed-through - returning %d") % fallThroughReturn);
-FALLTHROUGH:
+ FALLTHROUGH:
   return fallThroughReturn;
 }
 
-#define LOCK_af_every 1
-#define DOCS_af_every "See CLHS for every"
 #define ARGS_af_every "(predicate &rest sequences)"
 #define DECL_af_every ""
+#define DOCS_af_every "See CLHS for every"
 T_sp af_every(T_sp predicate, List_sp sequences) {
   _G();
   Function_sp op = coerce::functionDesignator(predicate);
@@ -1063,10 +1088,9 @@ T_sp af_every(T_sp predicate, List_sp sequences) {
   return _lisp->_boolean(result);
 }
 
-#define LOCK_af_some 1
-#define DOCS_af_some "See CLHS for some"
 #define ARGS_af_some "(predicate &rest sequences)"
 #define DECL_af_some ""
+#define DOCS_af_some "See CLHS for some"
 T_sp af_some(T_sp predicate, List_sp sequences) {
   _G();
   Function_sp op = coerce::functionDesignator(predicate);
@@ -1077,10 +1101,9 @@ T_sp af_some(T_sp predicate, List_sp sequences) {
   return _Nil<T_O>();
 }
 
-#define LOCK_af_notany 1
-#define DOCS_af_notany "See CLHS for notany"
 #define ARGS_af_notany "(predicate &rest sequences)"
 #define DECL_af_notany ""
+#define DOCS_af_notany "See CLHS for notany"
 T_sp af_notany(T_sp predicate, List_sp sequences) {
   _G();
   Function_sp op = coerce::functionDesignator(predicate);
@@ -1089,10 +1112,9 @@ T_sp af_notany(T_sp predicate, List_sp sequences) {
   return _lisp->_boolean(result);
 }
 
-#define LOCK_af_notevery 1
-#define DOCS_af_notevery "See CLHS for notevery"
 #define ARGS_af_notevery "(predicate &rest sequences)"
 #define DECL_af_notevery ""
+#define DOCS_af_notevery "See CLHS for notevery"
 T_sp af_notevery(T_sp predicate, List_sp sequences) {
   _G();
   Function_sp op = coerce::functionDesignator(predicate);
@@ -1105,10 +1127,9 @@ T_sp af_notevery(T_sp predicate, List_sp sequences) {
   __BEGIN_DOC(candoScript.general.mapcar)
   __END_DOC
 */
-#define LOCK_cl_mapcar 1
-#define DOCS_cl_mapcar "See CLHS for mapcar"
 #define ARGS_cl_mapcar "(func_desig &rest lists)"
 #define DECL_cl_mapcar ""
+#define DOCS_cl_mapcar "See CLHS for mapcar"
 SYMBOL_EXPORT_SC_(ClPkg, mapcar);
 T_sp cl_mapcar(T_sp func_desig, List_sp lists) {
   _G();
@@ -1129,10 +1150,9 @@ T_sp cl_mapcar(T_sp func_desig, List_sp lists) {
   __BEGIN_DOC(candoScript.general.mapcar)
   __END_DOC
 */
-#define LOCK_cl_mapc 1
-#define DOCS_cl_mapc "See CLHS mapc"
 #define ARGS_cl_mapc "(op &rest lists)"
 #define DECL_cl_mapc ""
+#define DOCS_cl_mapc "See CLHS mapc"
 T_sp cl_mapc(T_sp top, List_sp lists) {
   _G();
   Function_sp op = coerce::functionDesignator(top);
@@ -1157,13 +1177,13 @@ T_sp cl_mapc(T_sp top, List_sp lists) {
     LOG(BF("About to evaluate map op[%s] on arguments[%s]") % _rep_(op) % _rep_(frame));
     T_sp res = eval::applyToActivationFrame(op, frame);
   }
-RETURN:
+ RETURN:
   return oCar(lists);
 }
 
-#define DOCS_cl_maplist "See CLHS maplist"
 #define ARGS_cl_maplist "(func_desig &rest lists)"
 #define DECL_cl_maplist ""
+#define DOCS_cl_maplist "See CLHS maplist"
 T_sp cl_maplist(T_sp func_desig, List_sp lists) {
   _G();
   //        printf("%s:%d maplist func_desig=%s   lists=%s\n", __FILE__, __LINE__, _rep_(func_desig).c_str(), _rep_(lists).c_str() );
@@ -1202,14 +1222,13 @@ T_sp cl_maplist(T_sp func_desig, List_sp lists) {
       //		*it = cCdr((*it));
     }
   }
-RETURN:
+ RETURN:
   return oCdr(result);
 }
 
-#define LOCK_cl_mapl 1
-#define DOCS_cl_mapl "See CLHS maplist"
 #define ARGS_cl_mapl "(op &rest lists)"
 #define DECL_cl_mapl ""
+#define DOCS_cl_mapl "See CLHS maplist"
 T_sp cl_mapl(T_sp top, List_sp lists) {
   _G();
   Function_sp op = coerce::functionDesignator(top);
@@ -1217,10 +1236,9 @@ T_sp cl_mapl(T_sp top, List_sp lists) {
   return oCar(lists);
 }
 
-#define LOCK_af_mapappend 1
-#define DOCS_af_mapappend "mapappend is like mapcar except that the results are appended together - see AMOP 280"
 #define ARGS_af_mapappend "(fun &rest cargs)"
 #define DECL_af_mapappend ""
+#define DOCS_af_mapappend "mapappend is like mapcar except that the results are appended together - see AMOP 280"
 T_mv af_mapappend(Function_sp fun, List_sp cargs) {
   _G();
   IMPLEMENT_MEF(BF("Fix me - I think I'm broken"));
@@ -1252,8 +1270,8 @@ T_mv cl_mapcan(T_sp op, List_sp lists) {
   List_sp parts = cl_mapcar(op, lists);
   T_sp result = cl_nconc(parts);
 #if 0
-	ValueFrame_sp frame(ValueFrame_O::create(parts,_Nil<ActivationFrame_O>()));
-	T_sp result = eval::applyToActivationFrame(cl::_sym_nconc,frame);
+  ValueFrame_sp frame(ValueFrame_O::create(parts,_Nil<ActivationFrame_O>()));
+  T_sp result = eval::applyToActivationFrame(cl::_sym_nconc,frame);
 #endif
   return (Values(result));
 };
@@ -1307,7 +1325,7 @@ List_sp af_append(List_sp lists) {
 #define ARGS_af_sequence_start_end "(func sequence start end)"
 #define DECL_af_sequence_start_end ""
 #define DOCS_af_sequence_start_end "Copied from ecl::sequence.d::sequence_start_end - throws errors if start/end are out of range for the sequence." \
-                                   " I'm not sure what the func argument is for. If end is nil then it is set to the end of the sequence.  Return MultipleValues(start,end,length)."
+  " I'm not sure what the func argument is for. If end is nil then it is set to the end of the sequence.  Return MultipleValues(start,end,length)."
 T_mv af_sequence_start_end(T_sp func, T_sp sequence, Fixnum_sp start, T_sp end) {
   _G();
   uint len = cl_length(sequence);
@@ -1333,107 +1351,107 @@ T_mv af_sequence_start_end(T_sp func, T_sp sequence, Fixnum_sp start, T_sp end) 
 #define DOCS_af_open ""
 Stream_mv af_open(T_sp filespec_desig, Symbol_sp direction, T_sp element_type, T_sp if_exists, T_sp if_does_not_exist, T_sp external_format )
 {_G();
-    LOG(BF("filespec_desig = %s") % _rep_(filespec_desig) );
-    LOG(BF("direction[%s]") % _rep_(direction) );
-    LOG(BF("if_exists[%s]") % _rep_(if_exists));
-    LOG(BF("if_does_not_exist[%s]") % _rep_(if_does_not_exist));
-    LOG(BF("external_format[%s]") % _rep_(external_format));
-    Pathname_sp filespec = cl_pathname(filespec_desig);
-    if ( direction == kw::_sym_input )
-    {
-	LOG(BF("status"));
-	if ( af_file_kind(filespec) != kw::_sym_file )
-	{
-	    FILE_ERROR(filespec);
-	}
-	if ( external_format == kw::_sym_default )
-	{
-	    LOG(BF("status"));
-	    FDInStream_sp fin = FDInStream_O::create(filespec);
-	    return(Values(fin));
-	    SYMBOL_SC_(KeywordPkg,gzip);
-	}
-	SIMPLE_ERROR(BF("For file[%s] Bad external-format option: %s") % filespec % _rep_(external_format) );
-    } else if ( direction == kw::_sym_output )
-    {
-	LOG(BF("direction was :output"));
-	if ( cl_probe_file(filespec).notnilp() )
-	{
-	    Str_sp truename = cl_namestring(cl_truename(filespec));
-	    LOG(BF("The file[%s] already exists")% truename->get() );
-	    SYMBOL_SC_(KeywordPkg,supersede);
-	    if ( if_exists.nilp() || if_exists == kw::_sym_supersede)
-	    {
-		LOG(BF("supersede"));
-		// First write output to a temporary file and then rename it to the original on close
-		Pathname_sp temporaryFileSpec = af_makePathname(_Nil<T_O>(), // host
-								false, // hostp
-								_Nil<T_O>(), // device
-								false, // devicep
-								_Nil<T_O>(), // directory
-								false, // directoryp
-								_Nil<T_O>(), // name
-								false, // namep
-								Str_O::create(filespec->_Type.as<Str_O>()->get()+"Temp"), //type
-								true, // typep
-								_Nil<T_O>(), // version
-								false, // versionp
-								kw::_sym_local, // scase
-								filespec // defaults
-		    );
-		if ( external_format == kw::_sym_default)
-		{
-		    LOG(BF("external_format is :default"));
-		    FDOutStream_sp fout = FDOutStream_O::createTemporary(temporaryFileSpec,filespec,std::ios_base::out|std::ios_base::trunc);
-		    return(Values(fout));
-		}
-		SYMBOL_SC_(KeywordPkg,error);
-	    } else if ( if_exists == kw::_sym_error )
-	    {
-		FILE_ERROR(filespec);
-		SYMBOL_SC_(KeywordPkg,append);
-	    } else if ( if_exists == kw::_sym_append )
-	    {
-		LOG(BF("if_exists is :append"));
-		if ( external_format != kw::_sym_default)
-		{
-		    SIMPLE_ERROR(BF("You cannot append to a file of external_format[%s]") % _rep_(external_format) );
-		}
-		LOG(BF("Setting up FDOutStream with append"));
-		FDOutStream_sp fout = FDOutStream_O::create(filespec,std::ios_base::ate|std::ios_base::app);
-		return(Values(fout));
-	    }
-	    SIMPLE_ERROR(BF("unknown option[%s] for if-exists") % _rep_(if_exists) );
-	} else
-	{
-	    LOG(BF("File does not exist"));
-	    SYMBOL_SC_(KeywordPkg,create);
-	    if ( if_does_not_exist.nilp() || if_does_not_exist == kw::_sym_create )
-	    {
-		LOG(BF("if_does_not_exist is :create"));
-		if ( external_format == kw::_sym_default)
-		{
-		    LOG(BF("external_format is :default"));
-		    FDOutStream_sp fout = FDOutStream_O::create(filespec,std::ios_base::out|std::ios_base::trunc);
-		    return(Values(fout));
-#if 0
-		} else if ( external_format == kw::_sym_gzip )
-		{
-		    LOG(BF("external_format is :gzip"));
-		    FileOutCompressedStream_sp fout = FileOutCompressedStream_O::createGzip(filespec);
-		    return(Values(fout));
-#endif
-		}
-	    } else if ( if_does_not_exist == kw::_sym_error )
-	    {
-		FILE_ERROR(filespec);
-	    }
-	    LOG(BF("falling through to unimplemented"));
-	    IMPLEMENT_ME();
-	}
-    }
+  LOG(BF("filespec_desig = %s") % _rep_(filespec_desig) );
+  LOG(BF("direction[%s]") % _rep_(direction) );
+  LOG(BF("if_exists[%s]") % _rep_(if_exists));
+  LOG(BF("if_does_not_exist[%s]") % _rep_(if_does_not_exist));
+  LOG(BF("external_format[%s]") % _rep_(external_format));
+  Pathname_sp filespec = cl_pathname(filespec_desig);
+  if ( direction == kw::_sym_input )
+  {
     LOG(BF("status"));
-    IMPLEMENT_ME();
+    if ( af_file_kind(filespec) != kw::_sym_file )
+    {
+      FILE_ERROR(filespec);
+    }
+    if ( external_format == kw::_sym_default )
+    {
+      LOG(BF("status"));
+      FDInStream_sp fin = FDInStream_O::create(filespec);
+      return(Values(fin));
+      SYMBOL_SC_(KeywordPkg,gzip);
+    }
+    SIMPLE_ERROR(BF("For file[%s] Bad external-format option: %s") % filespec % _rep_(external_format) );
+  } else if ( direction == kw::_sym_output )
+  {
+    LOG(BF("direction was :output"));
+    if ( cl_probe_file(filespec).notnilp() )
+    {
+      Str_sp truename = cl_namestring(cl_truename(filespec));
+      LOG(BF("The file[%s] already exists")% truename->get() );
+      SYMBOL_SC_(KeywordPkg,supersede);
+      if ( if_exists.nilp() || if_exists == kw::_sym_supersede)
+      {
+        LOG(BF("supersede"));
+		// First write output to a temporary file and then rename it to the original on close
+        Pathname_sp temporaryFileSpec = cl_make_pathname(_Nil<T_O>(), // host
+                                                        false, // hostp
+                                                        _Nil<T_O>(), // device
+                                                        false, // devicep
+                                                        _Nil<T_O>(), // directory
+                                                        false, // directoryp
+                                                        _Nil<T_O>(), // name
+                                                        false, // namep
+                                                        Str_O::create(filespec->_Type.as<Str_O>()->get()+"Temp"), //type
+                                                        true, // typep
+                                                        _Nil<T_O>(), // version
+                                                        false, // versionp
+                                                        kw::_sym_local, // scase
+                                                        filespec // defaults
+                                                        );
+        if ( external_format == kw::_sym_default)
+        {
+          LOG(BF("external_format is :default"));
+          FDOutStream_sp fout = FDOutStream_O::createTemporary(temporaryFileSpec,filespec,std::ios_base::out|std::ios_base::trunc);
+          return(Values(fout));
+        }
+        SYMBOL_SC_(KeywordPkg,error);
+      } else if ( if_exists == kw::_sym_error )
+      {
+        FILE_ERROR(filespec);
+        SYMBOL_SC_(KeywordPkg,append);
+      } else if ( if_exists == kw::_sym_append )
+      {
+        LOG(BF("if_exists is :append"));
+        if ( external_format != kw::_sym_default)
+        {
+          SIMPLE_ERROR(BF("You cannot append to a file of external_format[%s]") % _rep_(external_format) );
+        }
+        LOG(BF("Setting up FDOutStream with append"));
+        FDOutStream_sp fout = FDOutStream_O::create(filespec,std::ios_base::ate|std::ios_base::app);
+        return(Values(fout));
+      }
+      SIMPLE_ERROR(BF("unknown option[%s] for if-exists") % _rep_(if_exists) );
+    } else
+    {
+      LOG(BF("File does not exist"));
+      SYMBOL_SC_(KeywordPkg,create);
+      if ( if_does_not_exist.nilp() || if_does_not_exist == kw::_sym_create )
+      {
+        LOG(BF("if_does_not_exist is :create"));
+        if ( external_format == kw::_sym_default)
+        {
+          LOG(BF("external_format is :default"));
+          FDOutStream_sp fout = FDOutStream_O::create(filespec,std::ios_base::out|std::ios_base::trunc);
+          return(Values(fout));
+#if 0
+        } else if ( external_format == kw::_sym_gzip )
+        {
+          LOG(BF("external_format is :gzip"));
+          FileOutCompressedStream_sp fout = FileOutCompressedStream_O::createGzip(filespec);
+          return(Values(fout));
+#endif
+        }
+      } else if ( if_does_not_exist == kw::_sym_error )
+      {
+        FILE_ERROR(filespec);
+      }
+      LOG(BF("falling through to unimplemented"));
+      IMPLEMENT_ME();
+    }
+  }
+  LOG(BF("status"));
+  IMPLEMENT_ME();
 }
 #endif
 
@@ -1546,83 +1564,83 @@ T_sp type_of(T_sp x) {
     return mcc->className();
   } else
 #endif
-      if (x.fixnump()) {
-    ql::list res(_lisp);
-    res << cl::_sym_integer << x << x;
-    return res.cons();
-  } else if (Integer_sp ix = x.asOrNull<Integer_O>()) {
-    ql::list res(_lisp);
-    res << cl::_sym_integer << ix << ix;
-    return res.cons();
-  } else if (af_characterP(x)) {
-    if (af_standard_char_p(gc::As<Character_sp>(x)))
-      return cl::_sym_standard_char;
-    return cl::_sym_character;
-  } else if (Symbol_sp symx = x.asOrNull<Symbol_O>()) {
-    if (x == _lisp->_true())
-      return cl::_sym_boolean;
-    if (af_keywordP(symx))
-      return cl::_sym_keyword;
-    return cl::_sym_symbol;
-  } else if (String_sp sx = x.asOrNull<String_O>()) {
-    Symbol_sp t;
-    if (sx->adjustable_array_p() || sx->array_has_fill_pointer_p() || sx->_displaced_array_p()) {
-      t = cl::_sym_array;
-    } else
-      t = cl::_sym_simple_array;
-    return (ql::list(_lisp) << t << cl::_sym_base_char << Cons_O::createList(make_fixnum(1), make_fixnum(cl_length(sx)))).cons();
-  } else if (Vector_sp vx = x.asOrNull<Vector_O>()) {
-    if (vx->adjustable_array_p() || vx->_displaced_array_p()) {
-      return (ql::list(_lisp) << cl::_sym_vector << vx->element_type_as_symbol() << vx->arrayDimensions()).cons();
-    } else if (vx->array_has_fill_pointer_p() /* || (cl_elttype)x->vector.elttype != aet_object) */) {
-      return (ql::list(_lisp) << cl::_sym_simple_array << vx->element_type_as_symbol() << vx->arrayDimensions()).cons();
-    } else {
-      return (ql::list(_lisp) << cl::_sym_simple_vector << make_fixnum(cl_length(vx))).cons();
+    if (x.fixnump()) {
+      ql::list res(_lisp);
+      res << cl::_sym_integer << x << x;
+      return res.cons();
+    } else if (Integer_sp ix = x.asOrNull<Integer_O>()) {
+      ql::list res(_lisp);
+      res << cl::_sym_integer << ix << ix;
+      return res.cons();
+    } else if (af_characterP(x)) {
+      if (af_standard_char_p(gc::As<Character_sp>(x)))
+        return cl::_sym_standard_char;
+      return cl::_sym_character;
+    } else if (Symbol_sp symx = x.asOrNull<Symbol_O>()) {
+      if (x == _lisp->_true())
+        return cl::_sym_boolean;
+      if (af_keywordP(symx))
+        return cl::_sym_keyword;
+      return cl::_sym_symbol;
+    } else if (String_sp sx = x.asOrNull<String_O>()) {
+      Symbol_sp t;
+      if (sx->adjustable_array_p() || sx->array_has_fill_pointer_p() || sx->_displaced_array_p()) {
+        t = cl::_sym_array;
+      } else
+        t = cl::_sym_simple_array;
+      return (ql::list(_lisp) << t << cl::_sym_base_char << Cons_O::createList(make_fixnum(1), make_fixnum(cl_length(sx)))).cons();
+    } else if (Vector_sp vx = x.asOrNull<Vector_O>()) {
+      if (vx->adjustable_array_p() || vx->_displaced_array_p()) {
+        return (ql::list(_lisp) << cl::_sym_vector << vx->element_type_as_symbol() << vx->arrayDimensions()).cons();
+      } else if (vx->array_has_fill_pointer_p() /* || (cl_elttype)x->vector.elttype != aet_object) */) {
+        return (ql::list(_lisp) << cl::_sym_simple_array << vx->element_type_as_symbol() << vx->arrayDimensions()).cons();
+      } else {
+        return (ql::list(_lisp) << cl::_sym_simple_vector << make_fixnum(cl_length(vx))).cons();
+      }
+    } else if (Array_sp ax = x.asOrNull<Array_O>()) {
+      Symbol_sp t;
+      if (ax->adjustable_array_p() || ax->_displaced_array_p()) {
+        t = cl::_sym_array;
+      } else
+        t = cl::_sym_simple_array;
+      return (ql::list(_lisp) << t << ax->element_type_as_symbol() << ax->arrayDimensions()).cons();
+    } else if (BitVector_sp bx = x.asOrNull<BitVector_O>()) {
+      Symbol_sp t;
+      if (bx->adjustable_array_p() || bx->array_has_fill_pointer_p() || bx->_displaced_array_p()) {
+        t = cl::_sym_array;
+      } else
+        t = cl::_sym_simple_array;
+      return (ql::list(_lisp) << t << cl::_sym_bit << Cons_O::createList(make_fixnum(1), make_fixnum(cl_length(bx)))).cons();
+    } else if (WrappedPointer_sp pp = x.asOrNull<WrappedPointer_O>()) {
+      return pp->_instanceClass()->className();
+    } else if (af_structurep(x)) {
+      return gc::As<StructureObject_sp>(x)->structureType();
+    } else if (Stream_sp stx = x.asOrNull<Stream_O>()) {
+      if (gc::IsA<SynonymStream_sp>(stx))
+        return cl::_sym_SynonymStream_O;
+      else if (gc::IsA<BroadcastStream_sp>(stx))
+        return cl::_sym_BroadcastStream_O;
+      else if (gc::IsA<ConcatenatedStream_sp>(stx))
+        return cl::_sym_ConcatenatedStream_O;
+      else if (gc::IsA<TwoWayStream_sp>(stx))
+        return cl::_sym_TwoWayStream_O;
+      else if (gc::IsA<StringInputStream_sp>(stx))
+        return _sym_StringInputStream_O;
+      else if (gc::IsA<StringOutputStream_sp>(stx))
+        return _sym_StringOutputStream_O;
+      else if (gc::IsA<EchoStream_sp>(stx))
+        return cl::_sym_EchoStream_O;
+      else
+        return cl::_sym_FileStream_O;
+    } else if (x.consp()) {
+      return cl::_sym_cons;
+    } else if (Pathname_sp px = x.asOrNull<Pathname_O>()) {
+      if (af_logicalPathnameP(px)) {
+        return cl::_sym_logical_pathname;
+      } else {
+        return cl::_sym_pathname;
+      }
     }
-  } else if (Array_sp ax = x.asOrNull<Array_O>()) {
-    Symbol_sp t;
-    if (ax->adjustable_array_p() || ax->_displaced_array_p()) {
-      t = cl::_sym_array;
-    } else
-      t = cl::_sym_simple_array;
-    return (ql::list(_lisp) << t << ax->element_type_as_symbol() << ax->arrayDimensions()).cons();
-  } else if (BitVector_sp bx = x.asOrNull<BitVector_O>()) {
-    Symbol_sp t;
-    if (bx->adjustable_array_p() || bx->array_has_fill_pointer_p() || bx->_displaced_array_p()) {
-      t = cl::_sym_array;
-    } else
-      t = cl::_sym_simple_array;
-    return (ql::list(_lisp) << t << cl::_sym_bit << Cons_O::createList(make_fixnum(1), make_fixnum(cl_length(bx)))).cons();
-  } else if (WrappedPointer_sp pp = x.asOrNull<WrappedPointer_O>()) {
-    return pp->_instanceClass()->className();
-  } else if (af_structurep(x)) {
-    return gc::As<StructureObject_sp>(x)->structureType();
-  } else if (Stream_sp stx = x.asOrNull<Stream_O>()) {
-    if (gc::IsA<SynonymStream_sp>(stx))
-      return cl::_sym_SynonymStream_O;
-    else if (gc::IsA<BroadcastStream_sp>(stx))
-      return cl::_sym_BroadcastStream_O;
-    else if (gc::IsA<ConcatenatedStream_sp>(stx))
-      return cl::_sym_ConcatenatedStream_O;
-    else if (gc::IsA<TwoWayStream_sp>(stx))
-      return cl::_sym_TwoWayStream_O;
-    else if (gc::IsA<StringInputStream_sp>(stx))
-      return _sym_StringInputStream_O;
-    else if (gc::IsA<StringOutputStream_sp>(stx))
-      return _sym_StringOutputStream_O;
-    else if (gc::IsA<EchoStream_sp>(stx))
-      return cl::_sym_EchoStream_O;
-    else
-      return cl::_sym_FileStream_O;
-  } else if (x.consp()) {
-    return cl::_sym_cons;
-  } else if (Pathname_sp px = x.asOrNull<Pathname_O>()) {
-    if (af_logicalPathnameP(px)) {
-      return cl::_sym_logical_pathname;
-    } else {
-      return cl::_sym_pathname;
-    }
-  }
   return af_type_to_symbol(x);
 }
 
@@ -1662,7 +1680,7 @@ Integer_sp cl_sxhash(T_sp obj) {
 
 }; /* core */
 
-namespace core {
+CL_NAMESPACE namespace core {
 
 EXPOSE_CLASS(core, InvocationHistoryFrameIterator_O);
 
@@ -2042,7 +2060,7 @@ T_sp af_ihsBacktrace(T_sp outputDesignator, T_sp msg) {
 };
 };
 
-namespace core {
+CL_NAMESPACE namespace core {
 void initialize_primitives() {
   _G();
   //
@@ -2213,13 +2231,16 @@ void initialize_primitives() {
 
   Defun(isTrue);
 
-  SYMBOL_EXPORT_SC_(CorePkg, pointer);
-  Defun(pointer);
 
   SYMBOL_EXPORT_SC_(ExtPkg, getEnv);
   Defun(getEnv);
-  CoreDefun(setenv);
+  SYMBOL_EXPORT_SC_(CorePkg, pointer);
 
+#if 0
+  CoreDefun(describe_cxx_object);
+  CoreDefun(setenv);
+  CoreDefun(pointer);
+#endif
   SYMBOL_EXPORT_SC_(CorePkg, toTaggedFixnum);
   SYMBOL_EXPORT_SC_(CorePkg, fromTaggedFixnum);
   SYMBOL_EXPORT_SC_(CorePkg, dumpTaggedFixnum);
@@ -2272,7 +2293,6 @@ void initialize_primitives() {
   CoreDefun(slot_cache_resize);
   CoreDefun(single_dispatch_method_cache_resize);
   CoreDefun(cxx_lambda_list_handler_create_bindings_calls);
-  CoreDefun(describe_cxx_object);
 }
 
 void initializePythonPrimitives(Lisp_sp lisp) {

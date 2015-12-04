@@ -52,9 +52,9 @@ Vector_sp cl_vector(List_sp args) {
   return vec;
 };
 
-#define DOCS_core_make_vector "make_vector See si_make_vector in ecl>>array.d"
 #define ARGS_core_make_vector "(element-type dimension &optional adjustable (fill-pointer t) displaced-to displaced-index-offset initial-element initial-contents)"
 #define DECL_core_make_vector ""
+#define DOCS_core_make_vector "make_vector See si_make_vector in ecl>>array.d"
 SYMBOL_EXPORT_SC_(ClPkg, subtypep);
 Vector_sp core_make_vector(T_sp element_type,
                            int dimension,
@@ -77,7 +77,10 @@ Vector_sp core_make_vector(T_sp element_type,
       return BitVectorWithFillPtr_O::create(dimension, s_fill_ptr, adjustable);
     }
     return SimpleBitVector_O::create(dimension);
-  } else if (element_type == cl::_sym_base_char || element_type == cl::_sym_character || element_type == cl::_sym_standard_char || element_type == cl::_sym_extended_char) {
+  } else if (element_type == cl::_sym_base_char
+             || element_type == cl::_sym_character
+             || element_type == cl::_sym_standard_char
+             || element_type == cl::_sym_extended_char) {
     // Currently any kind of Character vector is a Str or subclass
     // TODO: Maybe use other types of strings - unicode?
     char c = ' ';

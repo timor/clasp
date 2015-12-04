@@ -139,14 +139,12 @@ LETTER:
   return result;
 }
 
-#define DOCS_af_nread "nread"
-#define LOCK_af_nread 1
-#define ARGS_af_nread "(sin &optional (eof-error-p t) eof-value)"
-#define DECL_af_nread ""
-T_mv af_nread(T_sp sin, T_sp eof_error_p, T_sp eof_value) {
-  _G();
+#define ARGS_core_nread "(sin &optional (eof-error-p t) eof-value)"
+#define DECL_core_nread ""
+#define DOCS_core_nread "nread"
+T_mv core_nread(T_sp sin, T_sp eof_error_p, T_sp eof_value) {
   T_sp result = read_lisp_object(sin, eof_error_p.isTrue(), eof_value, false);
-  return (Values(result));
+  return Values(result);
 };
 
 string fix_exponent_char(const char *cur) {
@@ -703,14 +701,12 @@ T_sp read_lisp_object(T_sp sin, bool eofErrorP, T_sp eofValue, bool recursiveP) 
     }
   } else {
     increment_read_lisp_object_recursion_depth::reset();
-
     DynamicScopeManager scope(_sym_STARsharp_equal_final_tableSTAR,
                               HashTableEql_O::create(40, make_fixnum(4000), 0.8));
     scope.pushSpecialVariableAndSet(_sym_STARsharp_equal_temp_tableSTAR,
                                     HashTableEql_O::create(40, make_fixnum(4000), 0.8));
     scope.pushSpecialVariableAndSet(_sym_STARsharp_equal_repl_tableSTAR,
                                     HashTableEq_O::create(40, make_fixnum(4000), 0.8));
-
     result = read_lisp_object(sin, eofErrorP, eofValue, true);
   }
   if (result.nilp())
@@ -773,7 +769,11 @@ step1:
   if (x1_syntax_type == kw::_sym_single_escape_character) {
     LOG(BF("step5 - single-escape-character char[%c]") % clasp_as_char(x));
     LOG(BF("Handling single escape"));
-    y = gc::As<Character_sp>(cl_readChar(sin, _lisp->_true(), _Nil<T_O>(), _lisp->_true()));
+    T_sp ty = cl_readChar(sin, _lisp->_true(), _Nil<T_O>(), _lisp->_true());
+    if ( !ty.characterp() ) {
+      SIMPLE_ERROR(BF("Expected character - hit end"));
+    }
+    y = gc::As<Character_sp>(ty);
     token.clear();
     token.push_back(constituentChar(y, TRAIT_ALPHABETIC));
     LOG(BF("Read y[%s]") % clasp_as_char(y));
@@ -850,10 +850,7 @@ step9:
     LOG(BF("About to test y9_syntax_type[%s] single_escape[%s] are equal? ==> %d") % _rep_(y9_syntax_type) % _rep_(kw::_sym_single_escape_character) % (y9_syntax_type == kw::_sym_single_escape_character));
     if (y9_syntax_type == kw::_sym_single_escape_character) {
       LOG(BF("Handling single_escape_character"));
-      T_sp tz = cl_readChar(sin, _Nil<T_O>(), _Nil<T_O>(), _lisp->_true());
-      if (tz.nilp())
-        STREAM_ERROR(sin);
-      z = gc::As<Character_sp>(tz);
+      z = gc::As<Character_sp>(cl_readChar(sin, _lisp->_true(), _Nil<T_O>(), _lisp->_true()));
       token.push_back(constituentChar(z, TRAIT_ALPHABETIC));
       LOG(BF("Read z[%s] accumulated token[%s]") % clasp_as_char(z) % tokenStr(token));
       goto step9;
@@ -880,9 +877,7 @@ step10:
 }
 
 void exposeCore_lisp_reader() {
-  _G();
-  SYMBOL_SC_(CorePkg, nread);
-  Defun(nread);
+  CoreDefun(nread);
 
   // functions for reader
 }

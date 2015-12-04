@@ -38,7 +38,7 @@ THE SOFTWARE.
 //#define USE_BOEHM_MEMORY_MARKER
 #endif
 #ifndef APPLICATION_CONFIG
-#define APPLICATION_CONFIG < clasp / main / application.config >
+#define APPLICATION_CONFIG <clasp/main/application.config>
 #endif
 /*! Configure the application Clasp or Cando currently */
 #include APPLICATION_CONFIG
@@ -189,11 +189,6 @@ typedef std::size_t class_id;
 #endif //]
 #endif
 
-// Empty macros to scrape symbol and keyword symbol declarations from
-// the source code
-#define SYMBOL_EXPORT_SC_(p, x)
-#define SYMBOL_SC_(p, x)
-#define INTERN_(_p_, _x_) (_p_::_sym_##_x_)
 
 /*! Use this used to bind the C++ function fn_##x that will have the name (x) in Lisp (with "_" converted to "-") */
 #define DEFUN(pkg, x) defun(pkg, #x, &fn_##x, ARGS_fn_##x, DECL_fn_##x, DOCS_fn_##x, LOCK_fn_##x, _lisp);
@@ -216,31 +211,9 @@ typedef std::size_t class_id;
 /*! Use this used to bind the C++ function fn_##x that will have the name (x) in Lisp (with "_" converted to "-") */
 //#define DEFUN_NAME_EXPORT(pkg,x,lispname) defun(pkg, lispname, &fn_##x, ARGS_fn_##x, DECL_fn_##x, DOCS_fn_##x, LOCK_fn_##x, _lisp);
 
-#if 0
-/*! Define a PAIR of accessor functions, the getter and setter */
-#define DEFACCESSORS(x)                                                   \
-  af_def(CurrentPkg, #x, &af_##x, ARGS_af_##x, DOCS_af_##x, LOCK_af_##x); \
-  _lisp->add_accessor_pair(_sym_##x, _sym_setf_##x);
-
-/*! Define a PAIR of accessor functions, the getter and setter */
-#define DEFACCESSORS_EXPORT(x)                                                         \
-  af_def(CurrentPkg, #x, &af_##x, ARGS_af_##x, DECL_af_##x, DOCS_af_##x, LOCK_af_##x); \
-  _lisp->add_accessor_pair(_sym_##x, _sym_setf_##x);
-#endif
-
 /*! Use this in initializeCandoPrimitives to define a function
   This is a little more complicated than it needs to be to try and avoid unused variable warnings */
 #define DEFGENERIC(pkg, x) defgeneric(pkg, #x, &gf_##x, ARGS_gf_##x, DOCS_gf_##x, _lisp);
-
-#if 0
-/*! Use this in initializeCandoPrimitives to attach methods to the generic function */
-#define DEFMETHOD(x, id) defmethod(_sym_##x, md_##x##id, ARGS_md_##x##id, DECL_md_##x##id, DOCS_md_##x##id, _lisp);
-#endif
-
-//
-// Define this if you want to debug energy evaluation
-//
-#define TURN_ENERGY_FUNCTION_DEBUG_ON 1
 
 //
 // For Production code set PRODUCTION_CODE to 1
@@ -319,11 +292,6 @@ const handleType UniqueIdHandle = 1;
   This is scraped out of the code by "registerClasses.py"
 */
 
-#define NAMESPACE_PACKAGE_ASSOCIATION(x, y, z) \
-  static const std::string y = z;              \
-  namespace x {                                \
-  static const std::string CurrentPkg = z;     \
-  }
 
 #define UndefinedUnsignedInt UINT_MAX
 #define UNDEF_UINT UndefinedUnsignedInt
@@ -607,6 +575,7 @@ namespace core {
 #undef LCC_MACROS
 };
 
+#include <clasp/core/scrape.h>
 #include <clasp/gctools/memoryManagement.h>
 
 namespace core {
@@ -1194,6 +1163,7 @@ public:
   virtual List_sp declares() const;
   virtual T_sp cleavir_ast() const;
   virtual void setf_cleavir_ast(T_sp ast);
+  virtual T_sp setSourcePosInfo(T_sp sourceFile, size_t filePos, int lineno, int column);
 };
 };
 #include <clasp/core/exceptions.h>
@@ -1236,7 +1206,7 @@ public:
   Symbol_sp getKind() const { return this->kind; };
   bool macroP() const;
   T_sp sourcePosInfo() const; // { return this->_SourcePosInfo; };
-  T_sp setSourcePosInfo(T_sp sourceFile, size_t filePos, int lineno, int column);
+  virtual T_sp setSourcePosInfo(T_sp sourceFile, size_t filePos, int lineno, int column);
   virtual int sourceFileInfoHandle() const;
   virtual size_t filePos() const;
   virtual int lineNumber() const;

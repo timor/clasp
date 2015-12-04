@@ -87,8 +87,6 @@ T_sp cl_setSyntaxFromChar(Character_sp toChar, Character_sp fromChar, ReadTable_
 #define ARGS_cl_makeDispatchMacroCharacter "(char &optional non-terminating-p (readtable *readtable*))"
 #define DECL_cl_makeDispatchMacroCharacter ""
 #define DOCS_cl_makeDispatchMacroCharacter "makeDispatchMacroCharacter"
-#define FILE_cl_makeDispatchMacroCharacter __FILE__
-#define LINE_cl_makeDispatchMacroCharacter __LINE__
 T_sp cl_makeDispatchMacroCharacter(Character_sp ch, T_sp nonTerminatingP, ReadTable_sp readtable) {
   _G();
   readtable->make_dispatch_macro_character(ch, nonTerminatingP);
@@ -165,10 +163,9 @@ SYMBOL_SC_(CorePkg, STARinput_streamSTAR);
 SYMBOL_SC_(CorePkg, STARbackquote_levelSTAR);
 SYMBOL_SC_(CorePkg, STARstandard_readtableSTAR);
 
-#define LOCK_af_reader_double_quote_string 1
-#define DOCS_af_reader_double_quote_string "reader_double_quote_string"
 #define ARGS_af_reader_double_quote_string "(stream chr)"
 #define DECL_af_reader_double_quote_string ""
+#define DOCS_af_reader_double_quote_string "reader_double_quote_string"
 T_mv af_reader_double_quote_string(T_sp stream, Character_sp ch) {
   _G();
   stringstream str;
@@ -190,17 +187,16 @@ T_mv af_reader_double_quote_string(T_sp stream, Character_sp ch) {
   return (Values(Str_O::create(str.str())));
 };
 
-#define LOCK_af_reader_backquoted_expression 1
-#define DOCS_af_reader_backquoted_expression "reader_backquoted_expression"
 #define ARGS_af_reader_backquoted_expression "(sin ch)"
 #define DECL_af_reader_backquoted_expression ""
+#define DOCS_af_reader_backquoted_expression "reader_backquoted_expression"
 T_mv af_reader_backquoted_expression(T_sp sin, Character_sp ch) {
   _G();
   Fixnum_sp backquote_level = gc::As<Fixnum_sp>(_sym_STARbackquote_levelSTAR->symbolValue());
   Fixnum_sp new_backquote_level = make_fixnum(unbox_fixnum(backquote_level) + 1);
   // DynamicScopeManager will save the dynamic value of the symbol and restore it in dtor
   DynamicScopeManager scope(_sym_STARbackquote_levelSTAR, new_backquote_level);
-  T_sp quoted_object = read_lisp_object(sin, true, _Nil<T_O>(), true);
+  T_sp quoted_object = cl_read(sin, _lisp->_true(), _Nil<T_O>(), _lisp->_true());
   Cons_sp result = Cons_O::createList(_sym_backquote, quoted_object);
   //HERE_scCONS_CREATE_LIST2(_sym_backquote,quoted_object);
   if (_lisp->sourceDatabase().notnilp()) {
@@ -209,10 +205,9 @@ T_mv af_reader_backquoted_expression(T_sp sin, Character_sp ch) {
   return (Values(result));
 };
 
-#define LOCK_af_reader_comma_form 1
-#define DOCS_af_reader_comma_form "reader_comma_form"
 #define ARGS_af_reader_comma_form "(sin ch)"
 #define DECL_af_reader_comma_form ""
+#define DOCS_af_reader_comma_form "reader_comma_form"
 T_sp af_reader_comma_form(T_sp sin, Character_sp ch) {
   _G();
   Fixnum_sp backquote_level = gc::As<Fixnum_sp>(_sym_STARbackquote_levelSTAR->symbolValue());
@@ -230,16 +225,15 @@ T_sp af_reader_comma_form(T_sp sin, Character_sp ch) {
     gc::As<Character_sp>(cl_readChar(sin, _lisp->_true(), _Nil<T_O>(), _lisp->_true()));
   }
   SourcePosInfo_sp info = core_inputStreamSourcePosInfo(sin);
-  T_sp comma_object = read_lisp_object(sin, true, _Nil<T_O>(), true);
+  T_sp comma_object = cl_read(sin, _lisp->_true(), _Nil<T_O>(), _lisp->_true());
   list << head << comma_object;
   lisp_registerSourcePosInfo(list.cons(), info);
   return (list.cons());
 };
 
-#define LOCK_af_reader_list_allow_consing_dot 1
-#define DOCS_af_reader_list_allow_consing_dot "reader_list_allow_consing_dot"
 #define ARGS_af_reader_list_allow_consing_dot "(sin ch)"
 #define DECL_af_reader_list_allow_consing_dot ""
+#define DOCS_af_reader_list_allow_consing_dot "reader_list_allow_consing_dot"
 T_sp af_reader_list_allow_consing_dot(T_sp sin, Character_sp ch) {
   _G();
   SourcePosInfo_sp info = core_inputStreamSourcePosInfo(sin);
@@ -248,10 +242,9 @@ T_sp af_reader_list_allow_consing_dot(T_sp sin, Character_sp ch) {
   return list;
 };
 
-#define LOCK_af_reader_error_unmatched_close_parenthesis 1
-#define DOCS_af_reader_error_unmatched_close_parenthesis "reader_error_unmatched_close_parenthesis"
 #define ARGS_af_reader_error_unmatched_close_parenthesis "(sin ch)"
 #define DECL_af_reader_error_unmatched_close_parenthesis ""
+#define DOCS_af_reader_error_unmatched_close_parenthesis "reader_error_unmatched_close_parenthesis"
 T_mv af_reader_error_unmatched_close_parenthesis(T_sp sin, Character_sp ch) {
   _G();
   SourceFileInfo_sp info = core_sourceFileInfo(sin);
@@ -259,26 +252,24 @@ T_mv af_reader_error_unmatched_close_parenthesis(T_sp sin, Character_sp ch) {
   return (Values(_Nil<T_O>()));
 };
 
-#define LOCK_af_reader_quote 1
-#define DOCS_af_reader_quote "reader_quote"
 #define ARGS_af_reader_quote "(sin ch)"
 #define DECL_af_reader_quote ""
+#define DOCS_af_reader_quote "reader_quote"
 T_sp af_reader_quote(T_sp sin, Character_sp ch) {
   _G();
   //	ql::source_code_list result(sin->lineNumber(),sin->column(),core_sourceFileInfo(sin));
   ql::list acc;
   SourcePosInfo_sp spi = core_inputStreamSourcePosInfo(sin);
-  T_sp quoted_object = read_lisp_object(sin, true, _Nil<T_O>(), true);
+  T_sp quoted_object = cl_read(sin, _lisp->_true(), _Nil<T_O>(), _lisp->_true());
   acc << cl::_sym_quote << quoted_object;
   T_sp result = acc.cons();
   lisp_registerSourcePosInfo(result, spi);
   return result;
 }
 
-#define LOCK_af_reader_skip_semicolon_comment 1
-#define DOCS_af_reader_skip_semicolon_comment "reader_skip_semicolon_comment"
 #define ARGS_af_reader_skip_semicolon_comment "(sin ch)"
 #define DECL_af_reader_skip_semicolon_comment ""
+#define DOCS_af_reader_skip_semicolon_comment "reader_skip_semicolon_comment"
 T_mv af_reader_skip_semicolon_comment(T_sp sin, Character_sp ch) {
   _G();
   ASSERT(clasp_input_stream_p(sin));
@@ -294,10 +285,9 @@ T_mv af_reader_skip_semicolon_comment(T_sp sin, Character_sp ch) {
   return (Values0<T_O>());
 };
 
-#define LOCK_af_dispatch_macro_character 1
-#define DOCS_af_dispatch_macro_character "dispatch_macro_character"
 #define ARGS_af_dispatch_macro_character "(sin ch)"
 #define DECL_af_dispatch_macro_character ""
+#define DOCS_af_dispatch_macro_character "dispatch_macro_character"
 T_mv af_dispatch_macro_character(T_sp sin, Character_sp ch) {
   _G();
   char cpeek = clasp_peek_char(sin);
@@ -324,22 +314,19 @@ T_mv af_dispatch_macro_character(T_sp sin, Character_sp ch) {
 };
 
 /*! See SACLA reader.lisp::read-ch */
-Character_sp read_ch(T_sp sin) {
-  _G();
-  Character_sp nc = gc::As<Character_sp>(cl_readChar(sin, _Nil<T_O>(), _Nil<T_O>(), _lisp->_true()));
+T_sp read_ch(T_sp sin) {
+  T_sp nc = cl_readChar(sin, _Nil<T_O>(), _Nil<T_O>(), _lisp->_true());
   return nc;
 }
 
 /*! See SACLA reader.lisp::read-ch-or-die */
-Character_sp read_ch_or_die(T_sp sin) {
-  _G();
-  Character_sp nc = gc::As<Character_sp>(cl_readChar(sin, _lisp->_true(), _Nil<T_O>(), _lisp->_true()));
+T_sp read_ch_or_die(T_sp sin) {
+  T_sp nc = cl_readChar(sin, _lisp->_true(), _Nil<T_O>(), _lisp->_true());
   return nc;
 }
 
 /*! See SACLA reader.lisp::unread-ch */
 void unread_ch(T_sp sin, Character_sp c) {
-  _G();
   clasp_unread_char(clasp_as_char(c), sin);
 }
 
@@ -408,10 +395,9 @@ void make_str(stringstream &sout, List_sp cur_char, bool preserveCase = false) {
   }
 }
 
-#define LOCK_af_sharp_backslash 1
-#define DOCS_af_sharp_backslash "sharp_backslash"
 #define ARGS_af_sharp_backslash "(stream ch num)"
 #define DECL_af_sharp_backslash ""
+#define DOCS_af_sharp_backslash "sharp_backslash"
 T_mv af_sharp_backslash(T_sp sin, Character_sp ch, T_sp num) {
   _G();
   stringstream sslexemes;
@@ -429,17 +415,16 @@ T_mv af_sharp_backslash(T_sp sin, Character_sp ch, T_sp num) {
       return (Values(gc::As<Character_sp>(tch)));
     }
   }
-  return (Values0<T_O>());
+  return Values(_Nil<T_O>());//(Values0<T_O>());
 }
 
-#define LOCK_af_sharp_dot 1
-#define DOCS_af_sharp_dot "sharp_dot"
 #define ARGS_af_sharp_dot "(stream ch num)"
 #define DECL_af_sharp_dot ""
+#define DOCS_af_sharp_dot "sharp_dot"
 T_sp af_sharp_dot(T_sp sin, Character_sp ch, T_sp num) {
   _G();
   SourcePosInfo_sp spi = core_inputStreamSourcePosInfo(sin);
-  T_sp object = read_lisp_object(sin, true, _Nil<T_O>(), true);
+  T_sp object = cl_read(sin, _lisp->_true(), _Nil<T_O>(), _lisp->_true());
   if (!cl::_sym_STARread_suppressSTAR->symbolValue().isTrue()) {
     if (!cl::_sym_STARread_evalSTAR->symbolValue().isTrue()) {
       READER_ERROR(Str_O::create("Cannot evaluate the form #.~S"),
@@ -455,14 +440,13 @@ T_sp af_sharp_dot(T_sp sin, Character_sp ch, T_sp num) {
   return (Values0<T_O>());
 }
 
-#define LOCK_af_sharp_single_quote 1
-#define DOCS_af_sharp_single_quote "sharp_single_quote"
 #define ARGS_af_sharp_single_quote "(stream ch num)"
 #define DECL_af_sharp_single_quote ""
+#define DOCS_af_sharp_single_quote "sharp_single_quote"
 T_sp af_sharp_single_quote(T_sp sin, Character_sp ch, T_sp num) {
   _G();
   SourcePosInfo_sp spi = core_inputStreamSourcePosInfo(sin);
-  T_sp quoted_object = read_lisp_object(sin, true, _Nil<T_O>(), true);
+  T_sp quoted_object = cl_read(sin, _lisp->_true(), _Nil<T_O>(), _lisp->_true());
   //	ql::source_code_list result(sin->lineNumber(),sin->column(),core_sourceFileInfo(sin));
   ql::list result;
   result << cl::_sym_function << quoted_object;
@@ -471,10 +455,9 @@ T_sp af_sharp_single_quote(T_sp sin, Character_sp ch, T_sp num) {
   return tresult;
 };
 
-#define LOCK_af_sharp_left_parenthesis 1
-#define DOCS_af_sharp_left_parenthesis "sharp_left_parenthesis"
 #define ARGS_af_sharp_left_parenthesis "(stream ch num)"
 #define DECL_af_sharp_left_parenthesis ""
+#define DOCS_af_sharp_left_parenthesis "sharp_left_parenthesis"
 T_mv af_sharp_left_parenthesis(T_sp sin, Character_sp ch, /*Fixnum_sp*/ T_sp tnum) {
   _G();
   Character_sp right_paren = clasp_make_character(')');
@@ -502,10 +485,9 @@ T_mv af_sharp_left_parenthesis(T_sp sin, Character_sp ch, /*Fixnum_sp*/ T_sp tnu
   return (Values(_Nil<T_O>()));
 };
 
-#define LOCK_af_sharp_asterisk 1
-#define DOCS_af_sharp_asterisk "sharp_asterisk"
 #define ARGS_af_sharp_asterisk "(stream ch num)"
 #define DECL_af_sharp_asterisk ""
+#define DOCS_af_sharp_asterisk "sharp_asterisk"
 T_mv af_sharp_asterisk(T_sp sin, Character_sp ch, T_sp num) {
   _G();
   int dimcount, dim = 0;
@@ -513,7 +495,7 @@ T_mv af_sharp_asterisk(T_sp sin, Character_sp ch, T_sp num) {
   ReadTable_sp rtbl = gc::As<ReadTable_sp>(cl::_sym_STARreadtableSTAR->symbolValue());
 
   if (cl::_sym_STARread_suppressSTAR->symbolValue().isTrue()) {
-    read_lisp_object(sin, true, _Nil<T_O>(), true);
+    cl_read(sin, _lisp->_true(), _Nil<T_O>(), _lisp->_true());
     return Values(_Nil<T_O>());
   }
   for (dimcount = 0;; dimcount++) {
@@ -559,10 +541,9 @@ T_mv af_sharp_asterisk(T_sp sin, Character_sp ch, T_sp num) {
   return Values(x);
 };
 
-#define LOCK_af_sharp_colon 1
-#define DOCS_af_sharp_colon "sharp_colon"
 #define ARGS_af_sharp_colon "(stream ch num)"
 #define DECL_af_sharp_colon ""
+#define DOCS_af_sharp_colon "sharp_colon"
 T_mv af_sharp_colon(T_sp sin, Character_sp ch, T_sp num) {
   _G();
   stringstream sslexemes;
@@ -576,14 +557,13 @@ T_mv af_sharp_colon(T_sp sin, Character_sp ch, T_sp num) {
   return (Values(_Nil<T_O>()));
 }; // af_sharp_colon
 
-#define LOCK_af_sharp_r 1
-#define DOCS_af_sharp_r "sharp_r"
 #define ARGS_af_sharp_r "(stream subchar radix)"
 #define DECL_af_sharp_r ""
+#define DOCS_af_sharp_r "sharp_r"
 T_mv af_sharp_r(T_sp sin, Character_sp ch, gc::Nilable<Fixnum_sp> nradix) {
   _G();
   if (cl::_sym_STARread_suppressSTAR->symbolValue().isTrue()) {
-    T_sp object = read_lisp_object(sin, true, _Nil<T_O>(), true);
+    T_sp object = cl_read(sin, _lisp->_true(), _Nil<T_O>(), _lisp->_true());
     (void)object; // suppress warning
     return (Values(_Nil<T_O>()));
   } else if (nradix.nilp()) {
@@ -598,7 +578,7 @@ T_mv af_sharp_r(T_sp sin, Character_sp ch, gc::Nilable<Fixnum_sp> nradix) {
     {
       Fixnum_sp oradix = make_fixnum(iradix);
       DynamicScopeManager scope(cl::_sym_STARread_baseSTAR, oradix);
-      T_sp val = read_lisp_object(sin, true, _Nil<T_O>(), true);
+      T_sp val = cl_read(sin, _lisp->_true(), _Nil<T_O>(), _lisp->_true());
       if (!gc::IsA<Rational_sp>(val)) {
         SIMPLE_ERROR(BF("#%s (base %d) is not a rational: %s") % _rep_(ch) % iradix % _rep_(val));
       }
@@ -607,40 +587,36 @@ T_mv af_sharp_r(T_sp sin, Character_sp ch, gc::Nilable<Fixnum_sp> nradix) {
   }
 }
 
-#define LOCK_af_sharp_b 1
-#define DOCS_af_sharp_b "sharp_b"
 #define ARGS_af_sharp_b "(stream ch num)"
 #define DECL_af_sharp_b ""
+#define DOCS_af_sharp_b "sharp_b"
 T_mv af_sharp_b(T_sp sin, Character_sp ch, gc::Nilable<Fixnum_sp> num) {
   _G();
   return af_sharp_r(sin, ch, make_fixnum(2));
 };
 
-#define LOCK_af_sharp_o 1
-#define DOCS_af_sharp_o "sharp_o"
 #define ARGS_af_sharp_o "(stream ch num)"
 #define DECL_af_sharp_o ""
+#define DOCS_af_sharp_o "sharp_o"
 T_mv af_sharp_o(T_sp sin, Character_sp ch, gc::Nilable<Fixnum_sp> num) {
   _G();
   return af_sharp_r(sin, ch, make_fixnum(8));
 };
 
-#define LOCK_af_sharp_x 1
-#define DOCS_af_sharp_x "sharp_x"
 #define ARGS_af_sharp_x "(stream ch num)"
 #define DECL_af_sharp_x ""
+#define DOCS_af_sharp_x "sharp_x"
 T_mv af_sharp_x(T_sp sin, Character_sp ch, T_sp num) {
   _G();
   return af_sharp_r(sin, ch, make_fixnum(16));
 };
 
-#define LOCK_af_sharp_c 1
-#define DOCS_af_sharp_c "sharp_c"
 #define ARGS_af_sharp_c "(stream ch num)"
 #define DECL_af_sharp_c ""
+#define DOCS_af_sharp_c "sharp_c"
 T_mv af_sharp_c(T_sp sin, Character_sp ch, T_sp num) {
   _G();
-  T_sp olist = read_lisp_object(sin, true, _Nil<T_O>(), true);
+  T_sp olist = cl_read(sin, _lisp->_true(), _Nil<T_O>(), _lisp->_true());
   List_sp list = olist;
   if (!cl::_sym_STARread_suppressSTAR->symbolValue().isTrue()) {
     int list_length = cl_length(list);
@@ -655,34 +631,31 @@ T_mv af_sharp_c(T_sp sin, Character_sp ch, T_sp num) {
 
 }; // af_sharp_c
 
-#define LOCK_af_sharp_a 1
-#define DOCS_af_sharp_a "sharp_a"
 #define ARGS_af_sharp_a "(stream ch num)"
 #define DECL_af_sharp_a ""
+#define DOCS_af_sharp_a "sharp_a"
 T_mv af_sharp_a(T_sp sin, Character_sp ch, T_sp num) {
   _G();
   IMPLEMENT_MEF(BF("Implement sharp_a"));
 }; // af_sharp_a
 
-#define LOCK_af_sharp_s 1
-#define DOCS_af_sharp_s "sharp_s"
 #define ARGS_af_sharp_s "(stream ch num)"
 #define DECL_af_sharp_s ""
+#define DOCS_af_sharp_s "sharp_s"
 T_mv af_sharp_s(T_sp sin, Character_sp ch, T_sp num) {
   _G();
   IMPLEMENT_MEF(BF("Implement sharp_s"));
 }; // af_sharp_s
 
-#define LOCK_af_sharp_p 1
-#define DOCS_af_sharp_p "sharp_p"
 #define ARGS_af_sharp_p "(stream ch num)"
 #define DECL_af_sharp_p ""
+#define DOCS_af_sharp_p "sharp_p"
 T_mv af_sharp_p(T_sp sin, Character_sp ch, T_sp num) {
   _G();
   bool suppress = cl::_sym_STARread_suppressSTAR->symbolValue().isTrue();
   if (num.notnilp() && !suppress)
     extra_argument('P', sin, num);
-  T_sp d = read_lisp_object(sin, true, _Nil<T_O>(), true);
+  T_sp d = cl_read(sin, _lisp->_true(), _Nil<T_O>(), _lisp->_true());
   if (suppress) {
     d = _Nil<T_O>();
   } else {
@@ -692,7 +665,6 @@ T_mv af_sharp_p(T_sp sin, Character_sp ch, T_sp num) {
 }; // af_sharp_p
 
 // #if 0
-// #define LOCK_af_sharp_equal 1
 // #define DOCS_af_sharp_equal "sharp_equal"
 // #define ARGS_af_sharp_equal "(stream ch num)"
 // #define DECL_af_sharp_equal ""
@@ -712,7 +684,7 @@ T_mv af_sharp_p(T_sp sin, Character_sp ch, T_sp num) {
 // 	    sharp_sharp_alist = Cons_O::create(Cons_O::create(num,sharpThis),sharp_sharp_alist,_lisp);
 // 	    _sym_STARsharp_sharp_alistSTAR->setf_symbolValue(sharp_sharp_alist);
 // 	}
-// 	T_sp object = read_lisp_object(sin,true,_Nil<T_O>(),true);
+// 	T_sp object = cl_read(sin,true,_Nil<T_O>(),true);
 // 	List_sp sharp_equal_alist = _sym_STARsharp_equal_alistSTAR->symbolValue();
 // 	if ( sharp_equal_alist->assoc(sharpThis,_Nil<T_O>(),_Nil<T_O>(),_Nil<T_O>()).notnilp() )
 // 	{
@@ -726,7 +698,6 @@ T_mv af_sharp_p(T_sp sin, Character_sp ch, T_sp num) {
 // 	return(Values(object));
 //     }
 
-// #define LOCK_af_sharp_sharp 1
 // #define DOCS_af_sharp_sharp "sharp_sharp"
 // #define ARGS_af_sharp_sharp "(stream ch num)"
 // #define DECL_af_sharp_sharp ""
@@ -753,10 +724,9 @@ T_mv af_sharp_p(T_sp sin, Character_sp ch, T_sp num) {
 //     }
 // #endif
 
-#define DOCS_af_reader_feature_p "feature_p takes one argument - a feature test"
-#define LOCK_af_reader_feature_p 1
 #define ARGS_af_reader_feature_p "(feature-test)"
 #define DECL_af_reader_feature_p ""
+#define DOCS_af_reader_feature_p "feature_p takes one argument - a feature test"
 T_sp af_reader_feature_p(T_sp feature_test) {
   _G();
   if (feature_test.nilp())
@@ -787,59 +757,52 @@ T_sp read_feature_test(T_sp sin) {
   _G();
   // Read the feature test in the keyword package
   DynamicScopeManager dynamicScopeManager(cl::_sym_STARpackageSTAR, _lisp->keywordPackage());
-  T_sp feature = read_lisp_object(sin, true, _Nil<T_O>(), true);
+  T_sp feature = cl_read(sin, _lisp->_true(), _Nil<T_O>(), _lisp->_true());
   return feature;
 }
 
-#define LOCK_af_sharp_plus 1
-#define DOCS_af_sharp_plus "sharp_plus"
 #define ARGS_af_sharp_plus "(stream ch num)"
 #define DECL_af_sharp_plus ""
+#define DOCS_af_sharp_plus "sharp_plus"
 T_mv af_sharp_plus(T_sp sin, Character_sp ch, T_sp num) {
   _G();
   T_sp feat = read_feature_test(sin);
   LOG(BF("feature[%s]") % _rep_(feat));
   if (T_sp(eval::funcall(_sym_reader_feature_p, feat)).isTrue()) {
     LOG(BF("The feature test passed - reading lisp object"));
-    T_sp obj = read_lisp_object(sin, true, _Nil<T_O>(), true);
+    T_sp obj = cl_read(sin, _lisp->_true(), _Nil<T_O>(), _lisp->_true());
     LOG(BF("Read the object[%s]") % _rep_(obj));
-    return (Values(obj));
+    return Values(obj);
   } else {
-    LOG(BF("The feature test failed - returning nil"));
-    {
-      _BLOCK_TRACEF(BF("Suppressing read for unsupported feature[%s]") % feat->__repr__());
-      DynamicScopeManager dynScopeManager(cl::_sym_STARread_suppressSTAR, _lisp->_true());
-      read_lisp_object(sin, true, _Nil<T_O>(), true);
-    }
-    return (Values0<T_O>());
+    _BLOCK_TRACEF(BF("Suppressing read for unsupported feature[%s]") % feat->__repr__());
+    DynamicScopeManager dynScopeManager(cl::_sym_STARread_suppressSTAR, _lisp->_true());
+    cl_read(sin, _lisp->_true(), _Nil<T_O>(), _lisp->_true());
+    return Values0<T_O>();
   }
 }; // af_sharp_plus
 
-#define LOCK_af_sharp_minus 1
-#define DOCS_af_sharp_minus "sharp_minus"
 #define ARGS_af_sharp_minus "(stream ch num)"
 #define DECL_af_sharp_minus ""
+#define DOCS_af_sharp_minus "sharp_minus"
 T_mv af_sharp_minus(T_sp sin, Character_sp ch, T_sp num) {
-  _G();
   T_sp feat = read_feature_test(sin);
   LOG(BF("feature[%s]") % _rep_(feat));
   if (!T_sp(eval::funcall(_sym_reader_feature_p, feat)).isTrue()) {
     LOG(BF("The feature test passed - reading lisp object"));
-    T_sp obj = read_lisp_object(sin, true, _Nil<T_O>(), true);
+    T_sp obj = cl_read(sin, _lisp->_true(), _Nil<T_O>(), _lisp->_true());
     LOG(BF("Read the object[%s]") % _rep_(obj));
-    return (Values(obj));
+    return Values(obj);
   } else {
     LOG(BF("The feature test failed - returning nil"));
     DynamicScopeManager dynScopeManager(cl::_sym_STARread_suppressSTAR, _lisp->_true());
-    read_lisp_object(sin, true, _Nil<T_O>(), true);
-    return (Values0<T_O>());
+    cl_read(sin, _lisp->_true(), _Nil<T_O>(), _lisp->_true());
+    return Values0<T_O>();
   }
 }; // af_sharp_minus
 
-#define LOCK_af_sharp_vertical_bar 1
-#define DOCS_af_sharp_vertical_bar "sharp_vertical_bar"
 #define ARGS_af_sharp_vertical_bar "(stream ch num)"
 #define DECL_af_sharp_vertical_bar ""
+#define DOCS_af_sharp_vertical_bar "sharp_vertical_bar"
 T_mv af_sharp_vertical_bar(T_sp sin, Character_sp ch, T_sp num) {
   _G();
   ASSERT(clasp_input_stream_p(sin));
@@ -1011,12 +974,13 @@ T_sp ReadTable_O::set_syntax_type(Character_sp ch, T_sp syntaxType) {
   return _lisp->_true();
 }
 
-#define DOCS_ReadTable_set_macro_character "set-macro-character as in CL"
-#define ARGS_ReadTable_set_macro_character "(ch func_desig &optional non-terminating-p)"
-#define DECL_ReadTable_set_macro_character ""
 SYMBOL_SC_(KeywordPkg, non_terminating_macro_character);
 SYMBOL_SC_(KeywordPkg, terminating_macro_character);
 SYMBOL_SC_(KeywordPkg, macro_function);
+
+#define ARGS_ReadTable_set_macro_character "(ch func_desig &optional non-terminating-p)"
+#define DECL_ReadTable_set_macro_character ""
+#define DOCS_ReadTable_set_macro_character "set-macro-character as in CL"
 T_sp ReadTable_O::set_macro_character(Character_sp ch, T_sp funcDesig, T_sp non_terminating_p) {
   if (non_terminating_p.isTrue()) {
     this->set_syntax_type(ch, kw::_sym_non_terminating_macro_character);
@@ -1031,9 +995,7 @@ T_sp ReadTable_O::set_macro_character(Character_sp ch, T_sp funcDesig, T_sp non_
 string ReadTable_O::__repr__() const {
   stringstream ss;
   ss << "#<" << this->_instanceClass()->classNameAsString();
-  ss << ":case " << _rep_(this->_Case) << std::endl;
-  ss << ":syntax " << this->_SyntaxTypes->hash_table_dump(0, _Nil<T_O>()) << std::endl;
-  ss << ":macroCharacters " << this->_MacroCharacters->hash_table_dump(0, _Nil<T_O>()) << std::endl;
+  ss << " :case " << _rep_(this->_Case); 
   ss << "> ";
   return ss.str();
 }
@@ -1108,7 +1070,7 @@ T_sp ReadTable_O::set_dispatch_macro_character(Character_sp disp_char, Character
 #endif
 }
 
-Function_sp ReadTable_O::get_dispatch_macro_character(Character_sp disp_char, Character_sp sub_char) {
+T_sp ReadTable_O::get_dispatch_macro_character(Character_sp disp_char, Character_sp sub_char) {
   _OF();
   if (this->get_macro_character(disp_char) != _sym_dispatch_macro_character->symbolFunction()) {
     SIMPLE_ERROR(BF("%c is not a dispatch character") % _rep_(disp_char));
@@ -1116,7 +1078,7 @@ Function_sp ReadTable_O::get_dispatch_macro_character(Character_sp disp_char, Ch
   HashTable_sp dispatch_table = this->_DispatchMacroCharacters->gethash(disp_char);
   ASSERTF(dispatch_table.notnilp(), BF("The dispatch table for the character[%s] is nil! - this shouldn't happen") % _rep_(disp_char));
   Character_sp upcase_sub_char = clasp_char_upcase(sub_char);
-  Function_sp func = gc::As<Function_sp>(dispatch_table->gethash(upcase_sub_char, _Nil<T_O>()));
+  T_sp func = dispatch_table->gethash(upcase_sub_char, _Nil<T_O>());
   return func;
 #if 0
 	HashTable_sp syntax_table = this->_Syntax;
