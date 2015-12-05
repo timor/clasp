@@ -3,7 +3,9 @@
     (:export
      #:*begin-tag*
      #:*end-tag*
+     #:*debug-tags*
      #:buffer-stream
+     #:file-name
      #:buffer
      #:search-for-tag
      #:skip-char
@@ -21,6 +23,7 @@
    #:handler-code
    #:lisp-base-tag
    #:lisp-class-tag
+   #:file-name%
    #:c++-base%
    #:namespace%
    #:package%

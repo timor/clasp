@@ -24,30 +24,33 @@
   ((begin-tag :initarg :begin-tag)
    (handler-code :initarg :handler-code :accessor handler-code)))
 
-(defclass lisp-base-tag ()
+(defclass tag ()
+  ((file-name% :initarg :file-name% :accessor file-name%)))
+
+(defclass lisp-base-tag (tag)
   ((c++-base% :initarg :c++-base% :accessor c++-base%)))
 
-(defclass lisp-class-tag ()
+(defclass lisp-class-tag (tag)
   ((namespace% :initarg :namespace% :accessor namespace%)
    (package% :initarg :package% :accessor package%)
    (c++-base% :initarg :c++-base% :accessor c++-base%)
    (c++-class% :initarg :c++-class% :accessor c++-class%)
    (class-symbol% :initarg :class-symbol% :accessor class-symbol%)))
 
-(defclass lambda-tag ()
+(defclass lambda-tag (tag)
   ((lambda-list :initarg :lambda-list :accessor lambda-list)))
 
-(defclass docstring-tag ()
+(defclass docstring-tag (tag)
   ((docstring :initarg :docstring :accessor docstring)))
 
-(defclass declare-tag ()
+(defclass declare-tag (tag)
   ((declare-form :initarg :declare-form :accessor declare-form)))
 
-(defclass source-tag-mixin ()
+(defclass source-tag-mixin (tag)
   ((file :initarg :file :accessor file)
    (line :initarg :line :accessor line)
    (character-offset :initarg :character-offset :accessor character-offset)))
-  
+
 (defclass expose-code-tag (source-tag-mixin)
   ((function-name :initarg :function-name :accessor function-name)
    (signature-text :initarg :signature-text :accessor signature-text)
@@ -61,17 +64,17 @@
 (defclass expose-method-tag (expose-code-tag)
   ((class-tag :initarg :class-tag :accessor class-tag)))
 
-(defclass namespace-tag ()
+(defclass namespace-tag (tag)
   ((namespace :initarg :namespace :accessor namespace)))
 
-(defclass symbol-tag ()
+(defclass symbol-tag (tag)
   ((namespace% :initarg :namespace% :accessor namespace%)
    (package% :initarg :package% :accessor package%)
    (c++-name% :initarg :c++-name% :accessor c++-name%)
    (name% :initarg :name% :accessor name%)
    (exported% :initarg :exported% :accessor exported%)))
 
-(defclass namespace-package-association-tag ()
+(defclass namespace-package-association-tag (tag)
   ((namespace :initarg :namespace :accessor namespace)
    (package-var :initarg :package-var :accessor package-var)
    (package-str :initarg :package-str :accessor package-str)))
@@ -88,11 +91,13 @@
     (add-tag-handler handlers "LISP_BASE"
                      #'(lambda (bufs) ;(declare (core:lambda-name lambda-tag-handler))
                          (make-instance 'tags:lisp-base-tag
+                                        :file-name% (cscrape:file-name bufs)
                                         :c++-base% (cscrape:read-string-to-tag bufs cscrape:*end-tag*))))
     (add-tag-handler handlers "LISP_CLASS"
                      #'(lambda (bufs) ;(declare (core:lambda-name lambda-tag-handler))
                          (prog1
                              (make-instance 'tags:lisp-class-tag
+                                            :file-name% (cscrape:file-name bufs)
                                             :namespace% (read (cscrape:buffer-stream bufs))
                                             :package% (read (cscrape:buffer-stream bufs))
                                             :c++-class% (read (cscrape:buffer-stream bufs))
@@ -108,27 +113,30 @@
                                    (class-symbol (read (cscrape:buffer-stream bufs)))
                                    (c++-base (cscrape:read-string-to-tag bufs cscrape:*end-tag*)))
                                (make-instance 'tags:lisp-class-tag
+                                              :file-name% (cscrape:file-name bufs)
                                               :namespace% namespace
                                               :package% package
                                               :c++-class% c++-class
                                               :class-symbol% class-symbol
-                                              :c++-base% c++-base))
-                           (cscrape:skip-tag bufs cscrape:*end-tag*))))
+                                              :c++-base% c++-base)))))
     (add-tag-handler handlers "LAMBDA_BEGIN"
                      #'(lambda (bufs) ;(declare (core:lambda-name lambda-tag-handler))
                          (prog1
                              (make-instance 'tags:lambda-tag
+                                            :file-name% (cscrape:file-name bufs)
                                             :lambda-list (read (cscrape:buffer-stream bufs)))
                            (cscrape:skip-tag bufs cscrape:*end-tag*))))
     (add-tag-handler handlers "DOCSTRING_BEGIN"
                      #'(lambda (bufs) ;(declare (core:lambda-name docstring-tag-handler))
                          (let ((docstr (cscrape:read-string-to-tag bufs cscrape:*end-tag*)))
-                               (make-instance 'tags:docstring-tag
-                                              :docstring docstr))))
+                           (make-instance 'tags:docstring-tag
+                                          :file-name% (cscrape:file-name bufs)
+                                          :docstring docstr))))
     (add-tag-handler handlers "DECLARE_BEGIN"
                      #'(lambda (bufs) ;(declare (core:lambda-name declare-tag-handler))
                          (prog1
                              (make-instance 'tags:declare-tag
+                                            :file-name% (cscrape:file-name bufs)
                                             :declare-form (read (cscrape:buffer-stream bufs)))
                            (cscrape:skip-tag bufs cscrape:*end-tag*))))
     (add-tag-handler handlers "EXPOSE_FUNCTION"
@@ -138,6 +146,7 @@
                                 (signature-text (cscrape:read-string-to-character bufs #\) t))
                                 (function-name (extract-function-name-from-signature signature-text)))
                            (make-instance 'tags:expose-function-tag
+                                          :file-name% (cscrape:file-name bufs)
                                           :file file
                                           :line line
                                           :function-name function-name
@@ -153,6 +162,7 @@
                                (error 'bad-tag :tag "NAMESPACE"
                                       :context cur-pos-context )))
                            (make-instance 'tags:namespace-tag
+                                          :file-name% (cscrape:file-name bufs)
                                           :namespace namespace-name))))
     (add-tag-handler handlers "SYMBOL_INTERNAL"
                      #'(lambda (bufs) ;(declare (core:lambda-name namespace-tag-handler))
@@ -162,6 +172,7 @@
                            (declare (ignore cur-pos))
                            (cscrape:skip-tag bufs cscrape:*end-tag*)
                            (make-instance 'tags:symbol-tag
+                                          :file-name% (cscrape:file-name bufs)
                                           :package% pkg-name
                                           :exported% nil
                                           :name% sym-name))))
@@ -173,6 +184,7 @@
                            (declare (ignore cur-pos))
                            (cscrape:skip-tag bufs cscrape:*end-tag*)
                            (make-instance 'tags:symbol-tag
+                                          :file-name% (cscrape:file-name bufs)
                                           :package% pkg-name
                                           :exported% t
                                           :name% sym-name))))
@@ -184,6 +196,7 @@
                            (declare (ignore cur-pos))
                            (cscrape:skip-tag bufs cscrape:*end-tag*)
                            (make-instance 'tags:symbol-tag
+                                          :file-name% (cscrape:file-name bufs)
                                           :namespace% ns-name
                                           :exported% t
                                           :name% sym-name))))
@@ -196,6 +209,7 @@
                            (declare (ignore cur-pos))
                            (cscrape:skip-tag bufs cscrape:*end-tag*)
                            (make-instance 'tags:namespace-package-association-tag
+                                          :file-name% (cscrape:file-name bufs)
                                           :namespace ns-name
                                           :package-var pkg
                                           :package-str pkg-name))))

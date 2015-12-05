@@ -51,7 +51,7 @@ THE SOFTWARE.
 #include <llvm/Support/TargetRegistry.h>
 #include <llvm/Support/MathExtras.h>
 #include <llvm/Pass.h>
-#include <llvm/PassManager.h>
+#include <llvm/IR/PassManager.h>
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/IR/Verifier.h>
 #include "llvm/IR/AssemblyAnnotationWriter.h" // will be llvm/IR
@@ -635,34 +635,12 @@ TargetOptions_sp TargetOptions_O::make() {
   return self;
 };
 
-#if LLVM_VERSION<370
-bool TargetOptions_O::NoFramePointerElim() {
-  return this->wrappedPtr()->NoFramePointerElim;
-}
 
 void TargetOptions_O::setfNoFramePointerElim(bool val) {
   // if val == true then turn OFF FramePointerElim
   this->wrappedPtr()->NoFramePointerElim = val;
 }
-#endif
 
-#if LLVM_VERSION<370
-bool TargetOptions_O::JITEmitDebugInfo() {
-  return this->wrappedPtr()->JITEmitDebugInfo;
-}
-
-void TargetOptions_O::setfJITEmitDebugInfo(bool val) {
-  this->wrappedPtr()->JITEmitDebugInfo = val;
-}
-
-bool TargetOptions_O::JITEmitDebugInfoToDisk() {
-  return this->wrappedPtr()->JITEmitDebugInfoToDisk;
-}
-
-void TargetOptions_O::setfJITEmitDebugInfoToDisk(bool val) {
-  this->wrappedPtr()->JITEmitDebugInfoToDisk = val;
-}
-#endif
 EXPOSE_CLASS(llvmo, TargetOptions_O);
 
 void TargetOptions_O::exposeCando(core::Lisp_sp lisp) {
@@ -1421,62 +1399,7 @@ void DataLayout_O::exposePython(core::Lisp_sp lisp) {
 };
 }; // llvmo
 
-#if LLVM_VERSION<370
-namespace llvmo {
-EXPOSE_CLASS(llvmo, DataLayoutPass_O);
 
-#define ARGS_DataLayoutPass_O_make "(module)"
-#define DECL_DataLayoutPass_O_make ""
-#define DOCS_DataLayoutPass_O_make ""
-DataLayoutPass_sp DataLayoutPass_O::make() {
-  _G();
-  GC_ALLOCATE(DataLayoutPass_O, self);
-  self->_ptr = new llvm::DataLayoutPass();
-  return self;
-};
-
-void DataLayoutPass_O::exposeCando(core::Lisp_sp lisp) {
-  _G();
-  core::externalClass_<DataLayoutPass_O>();
-  core::af_def(LlvmoPkg, "makeDataLayoutPass", &DataLayoutPass_O::make, ARGS_DataLayoutPass_O_make, DECL_DataLayoutPass_O_make, DOCS_DataLayoutPass_O_make);
-};
-
-void DataLayoutPass_O::exposePython(core::Lisp_sp lisp) {
-  _G();
-  IMPLEMENT_ME();
-};
-}; // llvmo
-#endif
-
-#if LLVM_VERSION<370
-// LLVM 3.6
-namespace llvmo {
-EXPOSE_CLASS(llvmo, TargetLibraryInfo_O);
-
-#define ARGS_TargetLibraryInfo_O_make "(triple)"
-#define DECL_TargetLibraryInfo_O_make ""
-#define DOCS_TargetLibraryInfo_O_make ""
-TargetLibraryInfo_sp TargetLibraryInfo_O::make(llvm::Triple *tripleP) {
-  _G();
-  GC_ALLOCATE(TargetLibraryInfo_O, self);
-  self->_ptr = new llvm::TargetLibraryInfo(*tripleP);
-  ASSERT(self->_ptr);
-  return self;
-};
-
-void TargetLibraryInfo_O::exposeCando(core::Lisp_sp lisp) {
-  _G();
-  core::externalClass_<TargetLibraryInfo_O>();
-  core::af_def(LlvmoPkg, "makeTargetLibraryInfo", &TargetLibraryInfo_O::make, ARGS_TargetLibraryInfo_O_make, DECL_TargetLibraryInfo_O_make, DOCS_TargetLibraryInfo_O_make);
-};
-
-void TargetLibraryInfo_O::exposePython(core::Lisp_sp lisp) {
-  _G();
-  IMPLEMENT_ME();
-};
-}; // llvmo
-
-#else
 // This is needed for llvm3.7
 //
 namespace llvmo {
@@ -1503,7 +1426,6 @@ void TargetLibraryInfoWrapperPass_O::exposePython(core::Lisp_sp lisp) {
   IMPLEMENT_ME();
 };
 }; // llvmo
-#endif //
 
 #if 0 // TargetData was depreciated
 namespace llvmo
@@ -2931,17 +2853,6 @@ void IRBuilder_O::exposeCando(core::Lisp_sp lisp) {
   llvm::CallInst *(IRBuilder_O::ExternalType::*CreateCallArrayRef)(llvm::Value *Callee, llvm::ArrayRef<llvm::Value *> Args, const llvm::Twine &Name) = &IRBuilder_O::ExternalType::CreateCall;
   irbuilder.def("CreateCallArrayRef", CreateCallArrayRef);
 
-#if LLVM_VERSION<370
-  AVOID_OVERLOAD(irbuilder, llvm::CallInst *, CreateCall, 0, (llvm::Value *, const llvm::Twine &));
-  AVOID_OVERLOAD(irbuilder, llvm::CallInst *, CreateCall, 1, (llvm::Value *, llvm::Value *, const llvm::Twine &));
-  // Add the one for variable numbers of arguments
-
-  irbuilder
-    .def("CreateCall2", &IRBuilder_O::ExternalType::CreateCall2)
-    .def("CreateCall3", &IRBuilder_O::ExternalType::CreateCall3)
-    .def("CreateCall4", &IRBuilder_O::ExternalType::CreateCall4)
-    .def("CreateCall5", &IRBuilder_O::ExternalType::CreateCall5);
-#endif
   irbuilder
     .def("CreateSelect", &IRBuilder_O::ExternalType::CreateSelect)
     .def("CreateVAArg", &IRBuilder_O::ExternalType::CreateVAArg)

@@ -38,7 +38,11 @@
            (setf (tags:c++-name% tag) (tags:name% tag)))
          (unless (slot-boundp tag 'tags:namespace%)
            (let ((nsp-assoc (gethash (tags:package% tag) package-to-assoc)))
+             (or nsp-assoc (error "Could not find NAMESPACE_PACKAGE_ASSOCIATION for package ~a, symbol ~a in file ~a"
+                                  (tags:package% tag) (tags:name% tag) (tags:file-name% tag)))
              (setf (tags:namespace% tag) (tags:namespace nsp-assoc))))
          (unless (slot-boundp tag 'tags:package%))
-           (let ((nsp-assoc (gethash (tags:namespace% tag) namespace-to-assoc)))
-             (setf (tags:package% tag) (tags:package-var nsp-assoc))))))))
+         (let ((nsp-assoc (gethash (tags:namespace% tag) namespace-to-assoc)))
+           (or nsp-assoc (error "Could not find NAMESPACE_PACKAGE_ASSOCIATION for namespace ~a, symbol ~a in file ~a"
+                                (tags:namespace% tag) (tags:name% tag) (tags:file-name% tag)))
+           (setf (tags:package% tag) (tags:package-var nsp-assoc))))))))

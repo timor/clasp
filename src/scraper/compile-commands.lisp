@@ -102,23 +102,35 @@
 
 
 (defclass buffer-stream ()
-  ((buffer :initarg :buffer :accessor buffer)
+  ((file-name :initarg :file-name :accessor file-name)
+   (buffer :initarg :buffer :accessor buffer)
    (buffer-stream :initarg :buffer-stream :accessor buffer-stream)))
 
+(defun buffer-peek (bufs &optional from-pos)
+  (declare (optimize (debug 3)))
+  (let* ((pos (or from-pos (file-position (buffer-stream bufs))))
+         (epos (1- (position #\newline (buffer bufs) :test #'char= :start (file-position (buffer-stream bufs))))))
+    (subseq (buffer bufs) pos epos)))
+
 (defun read-entire-file (cc)
+  (declare (optimize (debug 3)))
   (with-open-file (stream (pathname (cpp-name cc)))
     (let ((data (make-string (file-length stream))))
       (read-sequence data stream)
       (make-instance 'buffer-stream
+                     :file-name (cpp-name cc)
                      :buffer data
                      :buffer-stream (make-string-input-stream data)))))
 
-(defun search-for-tag (bufs tag)
-  (let ((tag-pos (search tag (buffer bufs) :start2 (file-position (buffer-stream bufs)))))
-    (when tag-pos
-      (let ((next-pos (+ tag-pos (length tag))))
-        (file-position (buffer-stream bufs) next-pos)
-        (values tag-pos next-pos)))))
+(defun search-for-tag (bufs &optional (tag *begin-tag*))
+  (declare (optimize (debug 3)))
+  (let ((search-pos (file-position (buffer-stream bufs))))
+    (format t "search-for-tag from ~d~%" search-pos)
+    (let ((tag-pos (search tag (buffer bufs) :start2 search-pos :test #'string=)))
+      (when tag-pos
+        (let ((next-pos (+ tag-pos (length tag))))
+          (file-position (buffer-stream bufs) next-pos)
+          (values tag-pos next-pos))))))
 
 (defun skip-char (bufs)
   (read-char (buffer-stream bufs)))
@@ -156,26 +168,25 @@
     (subseq (buffer bufs) start end)))
 
 
-(defun parse-tag (bufs tag tag-handlers)
-  (let ((handler (gethash tag tag-handlers)))
+(defun parse-tag (bufs tag-name tag-handlers)
+  (let ((handler (gethash tag-name tag-handlers)))
     (if handler
         (funcall (tags:handler-code handler) bufs)
         (error 'tags:unknown-tag :tag tag))))
 
 (defun extract-all-tags (bufs)
   (declare (optimize (debug 3)))
-  (let (tags
-        (tag-handlers (tags:make-handler-hash-table)))
+  (let (tags (tag-handlers (tags:make-handler-hash-table)))
     (loop
        (let ((next-tag (next-tag-name bufs)))
          (unless next-tag
            (return (nreverse tags)))
          (push (parse-tag bufs next-tag tag-handlers) tags)))))
 
-
+(defparameter *debug-tags* nil)
 (defun read-all-tags-all-compile-commands (all-cc)
   (loop for cc in all-cc
      for bufs = (read-entire-file cc)
-     for tags = (extract-all-tags bufs)
+     for tags = (setf *debug-tags* (extract-all-tags bufs))
      do (interpret-tags tags)
      nconc tags))
