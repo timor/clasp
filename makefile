@@ -239,20 +239,21 @@ executable-symlinks:
 # Ensure that Make does not delete intermediate files in any rule
 .SECONDARY:
 
-submodule-libatomic: .gitmodules
+$(LIBATOMIC_OPS_SOURCE_DIR)/configure.ac: .gitmodules
 	-git submodule update --init src/boehm/libatomic_ops
+submodule-libatomic: $(LIBATOMIC_OPS_SOURCE_DIR)/configure.ac
 .PHONY: submodule-libatomic
 
 libatomic-setup: libatomic-configure
 .PHONY: libatomic-setup
 
-$(LIBATOMIC_OPS_SOURCE_DIR)/configure: submodule-libatomic
+$(LIBATOMIC_OPS_SOURCE_DIR)/configure: $(LIBATOMIC_OPS_SOURCE_DIR)/configure.ac
 	-(cd $(LIBATOMIC_OPS_SOURCE_DIR); autoreconf -vif)
 	-(cd $(LIBATOMIC_OPS_SOURCE_DIR); automake --add-missing )
 libatomic-autoconf: $(LIBATOMIC_OPS_SOURCE_DIR)/configure
 .PHONY: libatomic-autoconf
 
-$(LIBATOMIC_OPS_SOURCE_DIR)/Makefile: libatomic-configure
+$(LIBATOMIC_OPS_SOURCE_DIR)/Makefile: $(LIBATOMIC_OPS_SOURCE_DIR)/configure
 	install -d $(CLASP_APP_RESOURCES_LIB_COMMON_DIR);
 	(cd $(LIBATOMIC_OPS_SOURCE_DIR); \
 		export ALL_INTERIOR_PTRS=1; \
@@ -261,26 +262,27 @@ $(LIBATOMIC_OPS_SOURCE_DIR)/Makefile: libatomic-configure
 libatomic-configure: $(LIBATOMIC_OPS_SOURCE_DIR)/Makefile
 .PHONY: libatomic-configure
 
-$(CLASP_APP_RESOURCES_LIB_COMMON_DIR)/libatomic_ops.a: libatomic-configure
+$(CLASP_APP_RESOURCES_LIB_COMMON_DIR)/lib/libatomic_ops.a: $(LIBATOMIC_OPS_SOURCE_DIR)/Makefile
 	(cd $(LIBATOMIC_OPS_SOURCE_DIR); $(MAKE) -j$(PJOBS) | tee _libatomic_ops.log)
 	(cd $(LIBATOMIC_OPS_SOURCE_DIR); $(MAKE) -j$(PJOBS) install | tee _libatomic_ops_install.log)
-libatomic-compile: $(CLASP_APP_RESOURCES_LIB_COMMON_DIR)/libatomic_ops.a
+libatomic-compile: $(CLASP_APP_RESOURCES_LIB_COMMON_DIR)/lib/libatomic_ops.a
 .PHONY: libatomic-compile
 
 boehm-setup: boehm-configure
 .PHONY: boehm-setup
 
-submodule-boehm: .gitmodules
+$(BOEHM_SOURCE_DIR)/configure.ac: .gitmodules
 	-git submodule update --init src/boehm/bdwgc
+submodule-boehm: $(BOEHM_SOURCE_DIR)/configure.ac
 .PHONY: submodule-boehm
 
-$(BOEHM_SOURCE_DIR)/configure: submodule-boehm
+$(BOEHM_SOURCE_DIR)/configure: $(BOEHM_SOURCE_DIR)/configure.ac
 	-(cd $(BOEHM_SOURCE_DIR); autoreconf -vif)
 	-(cd $(BOEHM_SOURCE_DIR); automake --add-missing )
 boehm-autoconf: $(BOEHM_SOURCE_DIR)/configure
 .PHONY: boehm-autoconf
 
-$(BOEHM_SOURCE_DIR)/Makefile: boehm-autoconf libatomic-compile
+$(BOEHM_SOURCE_DIR)/Makefile: $(BOEHM_SOURCE_DIR)/configure $(CLASP_APP_RESOURCES_LIB_COMMON_DIR)/lib/libatomic_ops.a
 	(cd $(BOEHM_SOURCE_DIR); \
 		export ALL_INTERIOR_PTRS=1; \
                 CC=$(BOEHM_CC) \
@@ -291,7 +293,7 @@ $(BOEHM_SOURCE_DIR)/Makefile: boehm-autoconf libatomic-compile
 boehm-configure: $(BOEHM_SOURCE_DIR)/Makefile
 .PHONY: boehm-configure
 
-$(CLASP_APP_RESOURCES_LIB_COMMON_DIR)/lib/libgc.a: boehm-configure
+$(CLASP_APP_RESOURCES_LIB_COMMON_DIR)/lib/libgc.a: $(BOEHM_SOURCE_DIR)/Makefile
 	(cd $(BOEHM_SOURCE_DIR); $(MAKE) -j$(PJOBS) | tee _boehm.log)
 	(cd $(BOEHM_SOURCE_DIR); $(MAKE) -j$(PJOBS) install | tee _boehm_install.log)
 boehm-compile: $(CLASP_APP_RESOURCES_LIB_COMMON_DIR)/lib/libgc.a
