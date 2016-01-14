@@ -314,9 +314,9 @@ copy-lisp: boost_build submodule-asdf submodule-sicl
 	(cd src/lisp; $(BJAM) -j$(PJOBS) toolset=$(TOOLSET) link=$(LINK) program=clasp gc=boehm bundle )
 .PHONY: copy-lisp
 
-$(CLASP_APP_EXECS)/boehm/release/bin/clasp: boost_build boehm
+$(CLASP_APP_EXECS)/boehm/$(VARIANT)/bin/clasp: boost_build boehm
 	(cd src/main; $(BUILD) -j$(PJOBS) toolset=$(TOOLSET) link=$(LINK) program=clasp --prefix=$(CLASP_APP_EXECS)/boehm/$(VARIANT) gc=boehm $(VARIANT) clasp_install )
-boehm-cxx: $(CLASP_APP_EXECS)/boehm/release/bin/clasp
+boehm-cxx: $(CLASP_APP_EXECS)/boehm/$(VARIANT)/bin/clasp
 .PHONY: boehm-cxx
 
 $(CLASP_APP_RESOURCES_DIR)/lisp/build/system/min-boehm/image.o: boehm-cxx copy-lisp
