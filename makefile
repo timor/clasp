@@ -169,17 +169,6 @@ endef
 
 all:
 	$(MAKE) print-config
-	$(MAKE) submodules
-	$(MAKE) asdf
-	$(MAKE) boost_build
-	$(MAKE) boehm
-# install -d build/clasp/Contents/Resources
-# @if test ! -e build/clasp/Contents/Resources/clasp; then (cd build/clasp/Contents/Resources; ln -s ../../../../ clasp) ; fi
-	$(MAKE) copy-lisp
-	$(MAKE) boehm-cxx
-	$(MAKE) min-boehm
-	$(MAKE) full-boehm
-	$(MAKE) cclasp-boehm
 	$(MAKE) cclasp-boehm-addons
 	$(MAKE) executable-symlinks
 	echo Clasp is now built
@@ -334,7 +323,7 @@ cclasp-boehm: $(CLASP_APP_RESOURCES_DIR)/lisp/build/system/cclasp-boehm/image.o
 .PHONY: cclasp-boehm
 
 CCLASP_BOEHM_MODULES = $(CLASP_APP_RESOURCES_DIR)/lisp/build/system/cclasp-boehm/modules
-$(CCLASP_BOEHM_MODULES)/serve-event/serve-event.o $(CCLASP_BOEHM_MODULES)/asdf/asdf.o: cclasp-boehm submodule-asdf
+$(CCLASP_BOEHM_MODULES)/serve-event/serve-event.o $(CCLASP_BOEHM_MODULES)/asdf/asdf.o: submodule-asdf asdf cclasp-boehm
 	$(MAKE) -C src/main cclasp-boehm-addons
 cclasp-boehm-addons: $(CCLASP_BOEHM_MODULES)/serve-event/serve-event.o $(CCLASP_BOEHM_MODULES)/asdf/asdf.o
 .PHONY: cclasp-boehm-addons
