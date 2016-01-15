@@ -173,17 +173,14 @@ all:
 	$(MAKE) asdf
 	$(MAKE) boost_build
 	$(MAKE) boehm
-	install -d build/clasp/Contents/Resources
-	@if test ! -e build/clasp/Contents/Resources/clasp; then (cd build/clasp/Contents/Resources; ln -s ../../../../ clasp) ; fi
-	(cd src/lisp; $(BJAM) -j$(PJOBS) toolset=$(TOOLSET) link=$(LINK) program=clasp gc=boehm bundle )
-	(cd src/main; $(BUILD) -j$(PJOBS) toolset=$(TOOLSET) link=$(LINK) program=clasp --prefix=$(CLASP_APP_EXECS)/boehm/$(VARIANT) gc=boehm $(VARIANT) clasp_install )
-	$(MAKE) -C src/main min-boehm
-	$(MAKE) -C src/main bclasp-boehm-bitcode
-	$(MAKE) -C src/main bclasp-boehm-fasl
-	$(MAKE) -C src/main cclasp-from-bclasp-boehm-bitcode
-#	$(MAKE) -C src/main cclasp-boehm-fasl
-	$(MAKE) -C src/main cclasp-boehm-fasl
-	$(MAKE) -C src/main cclasp-boehm-addons
+# install -d build/clasp/Contents/Resources
+# @if test ! -e build/clasp/Contents/Resources/clasp; then (cd build/clasp/Contents/Resources; ln -s ../../../../ clasp) ; fi
+	$(MAKE) copy-lisp
+	$(MAKE) boehm-cxx
+	$(MAKE) min-boehm
+	$(MAKE) full-boehm
+	$(MAKE) cclasp-boehm
+	$(MAKE) cclasp-boehm-addons
 	$(MAKE) executable-symlinks
 	echo Clasp is now built
 .PHONY: all
